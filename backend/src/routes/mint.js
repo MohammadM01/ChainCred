@@ -1,5 +1,11 @@
 const express = require('express');
+const { mintCertificate } = require('../controllers/mintController');
 const router = express.Router();
-const ctrl = require('../controllers/mintController');
-router.post('/', ctrl.mint);
+
+/**
+ * Mint route (institute only).
+ * POST /api/mint - body { studentWallet, metadataUrl, issuerWallet }
+ */
+router.post('/', mintCertificate);
+
 module.exports = router;

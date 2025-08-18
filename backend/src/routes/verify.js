@@ -1,5 +1,11 @@
 const express = require('express');
+const { verifyCertificate } = require('../controllers/verifyController');
 const router = express.Router();
-const ctrl = require('../controllers/verifyController');
-router.post('/', ctrl.verify);
+
+/**
+ * Verify route (public).
+ * GET /api/verify?certificateID=... or ?studentWallet=...
+ */
+router.get('/', verifyCertificate);
+
 module.exports = router;

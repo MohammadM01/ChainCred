@@ -1,6 +1,13 @@
 const express = require('express');
+const { register, verifyWallet } = require('../controllers/authController');
 const router = express.Router();
-router.use('/upload', require('./upload'));
-router.use('/mint', require('./mint'));
-router.use('/verify', require('./verify'));
+
+/**
+ * Auth routes.
+ * POST /api/auth/register
+ * POST /api/auth/verify-wallet
+ */
+router.post('/register', register);
+router.post('/verify-wallet', verifyWallet);
+
 module.exports = router;
