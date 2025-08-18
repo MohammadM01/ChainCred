@@ -1,25 +1,23 @@
 {
   "name": "chaincred-backend",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
+  "description": "Backend for ChainCred",
   "main": "src/server.js",
   "scripts": {
-    "start": "node src/server.js",
-    "dev": "nodemon src/server.js"
+    "start": "nodemon src/server.js"
   },
   "dependencies": {
-    "@bnb-chain/greenfield-js-sdk": "^2.2.2",
+    "express": "^4.18.2",
     "cors": "^2.8.5",
-    "dotenv": "^17.2.1",
-    "ethers": "^6.15.0",
-    "express": "^4.21.2",
-    "multer": "^2.0.2"
+    "multer": "^1.4.5-lts.1",
+    "ethers": "^6.13.1",
+    "@bnb-chain/greenfield-js-sdk": "^0.2.0",
+    "dotenv": "^16.4.5",
+    "mongoose": "^8.5.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "nodemon": "^3.1.4"
   },
-  "keywords": [],
   "author": "",
-  "license": "ISC",
-  "description": ""
+  "license": "MIT"
 }
