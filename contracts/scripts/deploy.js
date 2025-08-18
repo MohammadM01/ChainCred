@@ -1,13 +1,19 @@
-const hre = require("hardhat");
+const { ethers } = require("hardhat");
 
 async function main() {
-  const SoulboundCredential = await hre.ethers.getContractFactory("SoulboundCredential");
-  const soulboundCredential = await SoulboundCredential.deploy();
-  await soulboundCredential.deployed();
-  console.log("SoulboundCredential deployed to:", soulboundCredential.address);
+  const [deployer] = await ethers.getSigners();
+  console.log("Deploying contracts with the account:", deployer.address);
+
+  const SoulboundCredential = await ethers.getContractFactory("SoulboundCredential");
+  const contract = await SoulboundCredential.deploy(deployer.address);
+
+  await contract.waitForDeployment();
+  console.log("SoulboundCredential deployed to:", await contract.getAddress());
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

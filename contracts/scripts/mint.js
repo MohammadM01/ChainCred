@@ -1,15 +1,20 @@
+const { ethers } = require("hardhat");
+
 async function main() {
-  const [owner] = await ethers.getSigners();
-  const address = process.env.CONTRACT_ADDRESS;
-  if (!address) throw new Error('CONTRACT_ADDRESS not set');
-  const Soulbound = await ethers.getContractFactory('SoulboundCredential');
-  const soul = Soulbound.attach(address);
-  const tx = await soul.mint(owner.address);
+  const contractAddress = process.env.CONTRACT_ADDRESS; // Set this in .env or hardcode for testing
+  const recipient = "0xRecipientAddressHere"; // Replace with actual address
+  const metadataURI = "https://greenfield.example.com/metadata.json"; // Replace with actual URI
+
+  const SoulboundCredential = await ethers.getContractAt("SoulboundCredential", contractAddress);
+  const tx = await SoulboundCredential.mint(recipient, metadataURI);
   await tx.wait();
-  console.log('Minted to', owner.address);
+
+  console.log("Minted token to:", recipient);
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+main()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.0",
-    "@openzeppelin/contracts": "^4.9.0",
+    "@openzeppelin/contracts": "^5.4.0",
     "chai": "^4.3.7",
     "ethereum-waffle": "^3.4.0",
     "hardhat": "^2.26.3"
