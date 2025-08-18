@@ -8,3 +8,5 @@ This repo contains three main parts:
 - backend: Express API for handling uploads, metadata and minting
 
 This README is a placeholder. See `docs/` for architecture and demo instructions.
+
+
