@@ -1,20 +1,6 @@
-# Node
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# env
 .env
-
-# build
 dist/
 build/
+*.log
 coverage/
-
-# mac/windows
-.DS_Store
-Thumbs.db
-
-# IDE
-.vscode/
