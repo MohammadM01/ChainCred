@@ -13,10 +13,13 @@ ChainCred uses blockchain for tamper-proof credentials:
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 This README is a placeholder. See `docs/` for architecture and demo instructions.
 
 
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 ## Tech Stack
@@ -47,6 +50,10 @@ This README is a placeholder. See `docs/` for architecture and demo instructions
 
 ## Team
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+Built for Binance Hackathon 2025 to revolutionize credential verification!
+>>>>>>> Stashed changes
+=======
 Built for Binance Hackathon 2025 to revolutionize credential verification!
 >>>>>>> Stashed changes
 =======
