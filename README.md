@@ -12,10 +12,13 @@ ChainCred uses blockchain for tamper-proof credentials:
 - Employers verify instantly with a hash or wallet address.
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 This README is a placeholder. See `docs/` for architecture and demo instructions.
 
 
 =======
+=======
+>>>>>>> Stashed changes
 ## Tech Stack
 - **Blockchain**: BNB Smart Chain (opBNB testnet for low-cost txns)
 - **Storage**: BNB Greenfield (decentralized file storage)
@@ -43,5 +46,9 @@ This README is a placeholder. See `docs/` for architecture and demo instructions
 - Testnet: opBNB testnet (chainId: 5611), contract at <contract-address>
 
 ## Team
+<<<<<<< Updated upstream
+Built for Binance Hackathon 2025 to revolutionize credential verification!
+>>>>>>> Stashed changes
+=======
 Built for Binance Hackathon 2025 to revolutionize credential verification!
 >>>>>>> Stashed changes

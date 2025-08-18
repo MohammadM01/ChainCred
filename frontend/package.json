@@ -11,6 +11,11 @@
   },
   "dependencies": {
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+    "@splinetool/react-spline": "^4.1.0",
+    "@tailwindcss/vite": "^4.1.12",
+>>>>>>> Stashed changes
 =======
     "@splinetool/react-spline": "^4.1.0",
     "@tailwindcss/vite": "^4.1.12",
