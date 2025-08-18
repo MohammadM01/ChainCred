@@ -1,0 +1,16 @@
+{
+  "name": "chaincred-contracts",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js"
+  },
+  "devDependencies": {
+    "hardhat": "^2.14.0",
+    "@nomiclabs/hardhat-waffle": "^2.0.0",
+    "chai": "^4.3.7",
+    "ethereum-waffle": "^3.4.0",
+    "@openzeppelin/contracts": "^4.9.0"
+  }
+}
