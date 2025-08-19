@@ -33,22 +33,27 @@ const verifyCertificate = async (req, res) => {
     }
 
     const { tokenId, metadataUrl, studentWallet: dbStudent, issuerWallet, fileHash, issuedDate } = certificate;
+      if (!tokenId) {
+        return res.status(400).json({ success: false, error: 'Certificate not minted yet' });
+      }
 
-    if (!tokenId) {
-      return res.status(400).json({ success: false, error: 'Certificate not minted yet' });
-    }
+      // If this is a local demo metadata URL, skip on-chain checks (no contract required)
+      const isDemo = typeof metadataUrl === 'string' && metadataUrl.includes('/demo/metadata/');
+      if (!isDemo) {
+        // Check on-chain ownership
+        const isOwner = await verify(dbStudent, tokenId);
+        if (!isOwner) {
+          return res.json({ success: true, data: { valid: false, details: 'Ownership mismatch on chain' } });
+        }
 
-    // Check on-chain ownership
-    const isOwner = await verify(dbStudent, tokenId);
-    if (!isOwner) {
-      return res.json({ success: true, data: { valid: false, details: 'Ownership mismatch on chain' } });
-    }
-
-    // Check tokenURI matches metadataUrl
-    const chainMetadataUrl = await getTokenURI(tokenId);
-    if (chainMetadataUrl !== metadataUrl) {
-      return res.json({ success: true, data: { valid: false, details: 'Metadata URL mismatch on chain' } });
-    }
+        // Check tokenURI matches metadataUrl
+        const chainMetadataUrl = await getTokenURI(tokenId);
+        if (chainMetadataUrl !== metadataUrl) {
+          return res.json({ success: true, data: { valid: false, details: 'Metadata URL mismatch on chain' } });
+        }
+      } else {
+        // demo: proceed without chain verification
+      }
 
     // Fetch metadata from Greenfield
     const response = await axios.get(metadataUrl);

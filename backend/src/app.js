@@ -16,11 +16,16 @@ const app = express();
  * For ChainCred MVP: Keeps it minimal, no extra middleware.
  */
 
-// CORS for frontend integration
+// CORS for frontend integration (support localhost:3000 and Vite:5173)
 app.use(cors({
-  origin: 'http://localhost:3000',  // Fixed for React frontend
-  methods: ['GET', 'POST'],
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+  ],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }));
 
 // Body parsers
@@ -33,6 +38,22 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/mint', mintRoutes);
 app.use('/api/verify', verifyRoutes);
+
+// Demo metadata route (serves seeded demo metadata) - removable for production
+app.get('/demo/metadata/:id', (req, res) => {
+  const id = req.params.id;
+  // For seeded demo we'll return a JSON with expected shape
+  const demo = {
+    certificateID: id,
+    studentWallet: '0x000000000000000000000000000000000000dEaD',
+    issuerWallet: '0x000000000000000000000000000000000000bEEF',
+    fileUrl: 'https://example.com/demo.pdf',
+    metadataUrl: `${req.protocol}://${req.get('host')}/demo/metadata/${id}`,
+    fileHash: 'demo-filehash-123',
+    issuedDateISO: new Date().toISOString(),
+  };
+  res.json(demo);
+});
 
 // Catch-all for unknown routes
 app.use((req, res) => {

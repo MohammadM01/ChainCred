@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Header from '../components/Header';
 import { initWeb3Auth } from '../utils/web3auth';
 import { useUser } from '../context/UserContext';
-import axios from 'axios';
+import axios from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 
 export default function AuthPage(){
@@ -22,8 +22,7 @@ export default function AuthPage(){
     if(!address) return showToast('error', 'Connect your wallet');
     setLoading(true);
     try{
-      const base = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.post(`${base}/api/auth/register`, { wallet: address, role: role === 'institution' ? 'institute' : role, name });
+      const res = await axios.post(`/api/auth/register`, { wallet: address, role: role === 'institution' ? 'institute' : role, name });
       setUser(res.data.data.user);
       showToast('success', 'Registered');
     }catch(err){
@@ -38,8 +37,7 @@ export default function AuthPage(){
       // web3auth signer placeholder
       const signature = await window.ethereum?.request?.({ method: 'personal_sign', params: [message, address] }).catch(()=>null);
       if(!signature) return showToast('error', 'Signature failed');
-      const base = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.post(`${base}/api/auth/verify-wallet`, { wallet: address, message, signature });
+      const res = await axios.post(`/api/auth/verify-wallet`, { wallet: address, message, signature });
       if(res.data.success){
         showToast('success', 'Wallet verified');
         navigate('/dashboard');

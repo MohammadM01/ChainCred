@@ -1,6 +1,18 @@
-export async function apiCall(){
-  // placeholder
-}
-export function baseURL(){
-  return process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-}
+import axios from 'axios';
+
+const envBase = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
+const BASE_URL = envBase || 'http://localhost:5000';
+
+const client = axios.create({
+  baseURL: BASE_URL,
+  headers: { 'Content-Type': 'application/json' },
+  timeout: 20000,
+});
+
+client.interceptors.response.use(
+  (res) => res,
+  (err) => Promise.reject(err)
+);
+
+export default client;
+export { BASE_URL };

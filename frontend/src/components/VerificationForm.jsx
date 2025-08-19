@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import axios from '../utils/api';
 
 export default function VerificationForm({ onResult }){
   const [q, setQ] = useState('');
@@ -9,9 +9,8 @@ export default function VerificationForm({ onResult }){
     e.preventDefault();
     setLoading(true);
     try{
-      const base = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.get(`${base}/api/verify?${q.includes('0x') ? `studentWallet=${q}` : `certificateID=${q}`}`);
-      onResult && onResult(res.data.data);
+      const res = await axios.get(`/api/verify?${q.includes('0x') ? `studentWallet=${q}` : `certificateID=${q}`}`);
+      onResult && onResult(res.data.data || res.data);
     }catch(err){
       onResult && onResult({ valid: false, error: err?.response?.data?.error || 'Not found' });
     }finally{setLoading(false)}

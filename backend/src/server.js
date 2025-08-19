@@ -9,12 +9,13 @@
      * BNB notes: Ensure OPBNB_TESTNET_RPC and GREENFIELD_API_KEY are set.
      */
 
-    dotenv.config();
+    // Load environment variables and allow .env to override existing env vars for dev
+    dotenv.config({ override: true });
 
     // Connect to MongoDB (await for async connection)
     (async () => {
     await connectDB();  // Await to ensure DB connects before starting server
-    const PORT = process.env.PORT || 5000;
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
         console.log(`ChainCred backend running on port ${PORT}`);
     });

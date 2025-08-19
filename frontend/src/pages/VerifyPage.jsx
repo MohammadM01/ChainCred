@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
-import axios from 'axios';
+import axios from '../utils/api';
+import { useSearchParams } from 'react-router-dom';
 
 export default function VerifyPage(){
+  const [searchParams] = useSearchParams();
   const [q, setQ] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -11,14 +13,33 @@ export default function VerifyPage(){
     e.preventDefault();
     if(!q) return;
     setLoading(true);
-    try{
-      const base = process.env.REACT_APP_BACKEND_URL || 'http://localhost:5000';
-      const res = await axios.get(`${base}/api/verify?${q.includes('0x') ? `studentWallet=${q}` : `certificateID=${q}`}`);
-      setResult(res.data.data);
+      try{
+        const res = await axios.get(`${q.includes('0x') ? `/api/verify?studentWallet=${q}` : `/api/verify?certificateID=${q}`}`);
+      setResult(res.data.data || res.data);
     }catch(err){
       setResult({ valid: false, error: err?.response?.data?.error || 'Not found' });
     }finally{setLoading(false)}
   }
+
+  useEffect(()=>{
+    const id = searchParams.get('certificateID');
+    const wallet = searchParams.get('studentWallet');
+    const param = id || wallet;
+    if(param){
+      setQ(param);
+      // auto-submit
+      (async ()=>{
+        setLoading(true);
+        try{
+          const res = await axios.get(`${param.includes('0x') ? `/api/verify?studentWallet=${param}` : `/api/verify?certificateID=${param}`}`);
+          setResult(res.data.data || res.data);
+        }catch(err){
+          setResult({ valid: false, error: err?.response?.data?.error || 'Not found' });
+        }finally{ setLoading(false) }
+      })();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white px-6">
