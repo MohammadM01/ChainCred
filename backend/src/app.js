@@ -16,9 +16,9 @@ const app = express();
  * For ChainCred MVP: Keeps it minimal, no extra middleware.
  */
 
-// CORS for frontend integration (fixed origin to 3000)
+// CORS for frontend integration
 app.use(cors({
-  origin: 'http://localhost:3000',  // For React frontend; add more if needed
+  origin: 'http://localhost:3000',  // Fixed for React frontend
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
@@ -27,8 +27,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Routes (use the defined variables for clarity)
-app.use('/', indexRoutes);  // Mount index at root '/' for health check
+// Routes (using defined variables to avoid redundant requires)
+app.use('/', indexRoutes);  // Mount at root for health check
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/mint', mintRoutes);

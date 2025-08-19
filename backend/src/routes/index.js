@@ -1,13 +1,12 @@
 const express = require('express');
-const { register, verifyWallet } = require('../controllers/authController');
 const router = express.Router();
 
 /**
- * Auth routes.
- * POST /api/auth/register
- * POST /api/auth/verify-wallet
+ * Index route for basic health check.
+ * Returns a simple message to confirm backend is running.
  */
-router.post('/register', register);
-router.post('/verify-wallet', verifyWallet);
+router.get('/', (req, res) => {
+  res.json({ success: true, message: 'ChainCred backend is running' });
+});
 
 module.exports = router;
