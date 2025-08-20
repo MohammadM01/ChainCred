@@ -1,90 +1,57 @@
-const { Client } = require('@bnb-chain/greenfield-js-sdk');
 const fs = require('fs');
-const path = require('path');
+const crypto = require('crypto');
 
 /**
- * Utility to upload files or buffers to BNB Greenfield testnet.
- * Initializes SDK with testnet URL and chain ID.
- * For Node.js: Uses ECDSA auth with private key from GREENFIELD_API_KEY (assume it's the private key).
- * MVP Assumption: Uses a pre-created bucket (e.g., 'chaincred-bucket'). Handle bucket creation if needed in production.
- * Uploads object and returns { url, hash }.
- * Error handling: Throws errors for MVP; log and return in production.
- * Note: Greenfield requires creating object on-chain first, then uploading payload.
+ * Temporary mock Greenfield upload utility to bypass SDK issues
+ * This will simulate the upload process while we resolve the Greenfield SDK problems
  */
 const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = false) => {
-  const GREENFIELD_RPC = 'https://gnfd-testnet-fullnode-tendermint-ap.bnbchain.org'; // Testnet RPC
-  const GREENFIELD_CHAIN_ID = '5600'; // Testnet chain ID
-  const PRIVATE_KEY = process.env.GREENFIELD_API_KEY; // Treat as private key for ECDSA
+  try {
+    // Get private key from environment
+    const privateKey = process.env.GREENFIELD_API_KEY;
+    if (!privateKey) {
+      throw new Error('GREENFIELD_API_KEY environment variable is required');
+    }
 
-  if (!PRIVATE_KEY) {
-    throw new Error('GREENFIELD_API_KEY (private key) is required');
+    // Create wallet for address generation
+    const { ethers } = require('ethers');
+    const wallet = new ethers.Wallet(privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`);
+    console.log(`Wallet address: ${wallet.address}`);
+
+    // Prepare file data
+    const body = Buffer.isBuffer(filePathOrBuffer) ? filePathOrBuffer : fs.readFileSync(filePathOrBuffer);
+    const contentType = isMetadata ? 'application/json' : 'application/pdf';
+
+    // Generate unique bucket and object names
+    const timestamp = Date.now();
+    const bucketName = `chaincred-${timestamp}-${Math.random().toString(36).substring(7)}`;
+    const uniqueObjectName = `${timestamp}-${objectName}`;
+
+    console.log(`Mock creating bucket: ${bucketName}`);
+    console.log(`Mock creating object: ${uniqueObjectName}`);
+
+    // Simulate processing time
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Generate mock URL and hash
+    const mockUrl = `https://gnfd-testnet-sp1.bnbchain.org/view/${bucketName}/${uniqueObjectName}`;
+    const hash = crypto.createHash('sha256').update(body).digest('hex');
+
+    console.log(`Mock upload successful`);
+    console.log(`Mock URL: ${mockUrl}`);
+    console.log(`File hash: ${hash}`);
+
+    // Return mock data
+    return { 
+      url: mockUrl, 
+      hash: hash,
+      note: "This is a mock upload - Greenfield SDK integration pending"
+    };
+
+  } catch (error) {
+    console.error('Mock Greenfield upload error:', error);
+    throw new Error(`Mock Greenfield upload failed: ${error.message}`);
   }
-
-  const client = Client.create(GREENFIELD_RPC, GREENFIELD_CHAIN_ID);
-
-  const bucketName = 'chaincred-bucket'; // MVP: Assume pre-created bucket; add creation logic if needed
-
-  let body;
-  let contentType = 'application/octet-stream';
-  if (Buffer.isBuffer(filePathOrBuffer)) {
-    body = filePathOrBuffer;
-    contentType = isMetadata ? 'application/json' : 'application/pdf';
-  } else {
-    // Assume filePath
-    body = fs.readFileSync(filePathOrBuffer);
-  }
-
-  // Step 1: Create object on-chain (broadcast tx)
-  const createObjectTx = await client.object.createObject({
-    bucketName,
-    objectName,
-    creator: '0xYourCreatorAddress', // MVP: Replace with issuer wallet or derive from private key
-    visibility: 'VISIBILITY_TYPE_PUBLIC_READ',
-    fileType: contentType,
-    redundancyType: 'REDUNDANCY_EC_TYPE',
-    contentLength: body.length,
-    expectCheckSums: [], // Compute if needed
-  }, {
-    type: 'ECDSA',
-    privateKey: PRIVATE_KEY,
-  });
-
-  const simulateInfo = await createObjectTx.simulate({ denom: 'BNB' });
-  const broadcastRes = await createObjectTx.broadcast({
-    denom: 'BNB',
-    gasLimit: Number(simulateInfo?.gasLimit),
-    gasPrice: simulateInfo?.gasPrice || '5000000000',
-    payer: '0xPayerAddress', // MVP: Use issuer or from env
-    granter: '',
-  });
-
-  if (broadcastRes.code !== 0) {
-    throw new Error('Failed to create object on Greenfield');
-  }
-
-  // Step 2: Upload the actual payload
-  const uploadRes = await client.object.uploadObject({
-    bucketName,
-    objectName,
-    body,
-    txnHash: broadcastRes.transactionHash,
-  }, {
-    type: 'ECDSA',
-    privateKey: PRIVATE_KEY,
-  });
-
-  if (uploadRes.code !== 0) {
-    throw new Error('Failed to upload to Greenfield');
-  }
-
-  // Construct URL (public read assumed)
-  const url = `https://gnfd-testnet-sp1.bnbchain.org/view/${bucketName}/${objectName}`; // Adjust based on SP
-
-  // Hash: Compute SHA256 of body for verification
-  const crypto = require('crypto');
-  const hash = crypto.createHash('sha256').update(body).digest('hex');
-
-  return { url, hash };
 };
 
 module.exports = { uploadToGreenfield };
