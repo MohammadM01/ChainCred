@@ -36,13 +36,29 @@ body {
 
 .slick-slide {
   transition: all 0.3s ease-in-out;
-  transform: scale(0.8);
+  transform: scale(0.8) translateX(0%); /* Reset translateX */
   opacity: 0.5;
-  filter: blur(2px);
+  filter: blur(4px);
+  z-index: 1;
 }
 
 .slick-center {
-  transform: scale(1);
+  transform: scale(1.05) translateX(0%); /* Reset translateX */
   opacity: 1;
   filter: blur(0px);
+  z-index: 2;
+}
+
+.slick-slide.slick-active.slick-current + .slick-active {
+  transform: scale(0.8) translateX(-50px); /* Adjust position for left card */
+}
+
+.slick-slide:not(.slick-current):not(.slick-active) {
+  /* This targets the slides that are not active or current, i.e., the ones far off to the sides */
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.slick-next, .slick-prev {
+  z-index: 3;
 }

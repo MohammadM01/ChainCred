@@ -26,7 +26,7 @@ const features = [
 
 function FeatureCard({ icon, title, description }) {
   return (
-    <div className="p-6 bg-gray-800 rounded-md shadow-md hover:shadow-yellow-400 transition-shadow h-full flex flex-col justify-between">
+    <div className="p-6 bg-gray-800 rounded-md shadow-md hover:shadow-yellow-400 transition-shadow h-[300px] w-[280px] flex flex-col justify-between mx-auto">
       <div className="text-5xl mb-4">{icon}</div>
       <div>
         <h3 className="text-xl font-semibold text-yellow-400 mb-2">{title}</h3>
@@ -41,19 +41,19 @@ export default function FeatureCarousel() {
     dots: true,
     infinite: true,
     speed: 500,
-    slidesToShow: 1,
+    slidesToShow: 3,
     slidesToScroll: 1,
     centerMode: true,
-    centerPadding: '100px',
+    centerPadding: '0px',
     autoplay: true,
     autoplaySpeed: 3000,
     responsive: [
       {
         breakpoint: 1024,
         settings: {
-          slidesToShow: 1,
+          slidesToShow: 3,
           slidesToScroll: 1,
-          centerPadding: '80px',
+          centerPadding: '0px',
         },
       },
       {
@@ -61,7 +61,7 @@ export default function FeatureCarousel() {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
-          centerPadding: '40px',
+          centerPadding: '80px',
         },
       },
     ],
