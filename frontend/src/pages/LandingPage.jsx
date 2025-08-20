@@ -1,15 +1,26 @@
 import Header from '../components/Header';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import axios from '../utils/api';
 import { useNavigate } from 'react-router-dom';
 import Spline from '@splinetool/react-spline';
 import scene from '/assets/scene.splinecode';
+import FeatureCarousel from '../components/FeatureCarousel';
 
 export default function LandingPage() {
   const [q, setQ] = useState('');
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [showSpline, setShowSpline] = useState(true);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setShowSpline(!mediaQuery.matches);
+
+    const handleChange = (e) => setShowSpline(!e.matches);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
   async function quickVerify(e) {
     e.preventDefault();
@@ -28,14 +39,20 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      <div className="relative h-[80vh] w-full overflow-hidden">
+      <div className="relative h-[94vh] w-full overflow-hidden">
         {/* Hero background */}
-        <Spline scene={scene} />
+        {showSpline ? (
+          <Spline scene={scene} />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900 via-black to-gray-800">
+            <img src="/assets/logo.png" alt="ChainCred Logo" className="w-48 h-48 animate-pulse" />
+          </div>
+        )}
 
         {/* Hero text content positioned top-left */}
-        <div className="absolute top-8 left-15 max-w-lg text-left">
+        <div className="absolute top-8 left-15 max-w-xl text-left">
           <h1 className="text-4xl md:text-5xl font-bold text-yellow-400">Fraud-proof credentials with ChainCred 🚀</h1>
-          <p className="mt-4 text-gray-200 max-w-sm">Tamper-proof, decentralized, verifiable on opBNB + Greenfield.</p>
+          <p className="mt-4 text-gray-200 max-w-sm">Tamper-proof, decentralized, verifiable on <br /> opBNB + Greenfield.</p>
           <div className="mt-6 flex gap-3">
             <button className="px-4 py-2 bg-yellow-400 text-black rounded" onClick={() => navigate('/auth')}>Get Started</button>
             <button className="px-4 py-2 border border-yellow-400 rounded text-yellow-400" onClick={() => navigate('/verify')}>Verify a Credential</button>
@@ -81,15 +98,7 @@ export default function LandingPage() {
       </div>
 
       {/* Feature Highlights Section */}
-      <section className="max-w-6xl mx-auto px-6 py-12">
-        <h2 className="text-3xl font-bold text-yellow-400 mb-8 text-center">Why ChainCred?</h2>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-          <FeatureCard icon="🛡️" title="Tamper-Proof Credentials" description="Verified via opBNB blockchain for authenticity." />
-          <FeatureCard icon="🗄️" title="Decentralized Storage" description="Secure and scalable with distributed storage." />
-          <FeatureCard icon="⏱️" title="Instant Verification" description="Verify any credential in seconds, no intermediaries." />
-          <FeatureCard icon="🔒" title="Fraud Prevention" description="Prevent fake resumes and forged certificates with soulbound NFTs." />
-        </div>
-      </section>
+      <FeatureCarousel />
 
       {/* How It Works Section */}
       <section className="max-w-6xl mx-auto px-6 py-12 bg-gray-900 rounded-md mb-12">
@@ -168,15 +177,16 @@ export default function LandingPage() {
 }
 
 // FeatureCard component
-function FeatureCard({ icon, title, description }) {
-  return (
-    <div className="p-6 bg-gray-800 rounded-md shadow-md hover:shadow-yellow-400 transition-shadow">
-      <div className="text-5xl mb-4">{icon}</div>
-      <h3 className="text-xl font-semibold text-yellow-400 mb-2">{title}</h3>
-      <p className="text-gray-300">{description}</p>
-    </div>
-  );
-}
+// No longer needed, as features are now in FeatureCarousel.jsx
+// function FeatureCard({ icon, title, description }) {
+//   return (
+//     <div className="p-6 bg-gray-800 rounded-md shadow-md hover:shadow-yellow-400 transition-shadow">
+//       <div className="text-5xl mb-4">{icon}</div>
+//       <h3 className="text-xl font-semibold text-yellow-400 mb-2">{title}</h3>
+//       <p className="text-gray-300">{description}</p>
+//     </div>
+//   );
+// }
 
 // Step component
 function Step({ number, title }) {
