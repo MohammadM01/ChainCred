@@ -1,4 +1,3 @@
-// frontend/src/pages/SignIn.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
@@ -38,12 +37,10 @@ export default function SignIn() {
       if (!signature) return showToast('error', 'Signature was rejected');
       const res = await axios.post(`/api/auth/verify-wallet`, { wallet, message, signature });
       if (res.data?.success) {
-        showToast('success', 'Wallet verified');
-        // Fetch user data to set in context
-        const userRes = await axios.get(`/api/auth/user/${wallet.toLowerCase()}`);
-        const nextUser = userRes.data?.data?.user || userRes.data?.user;
+        const nextUser = res.data?.data?.user;
         if (nextUser) {
-          setUser(nextUser);
+          setUser(nextUser); // Persists to local storage via UserContext
+          showToast('success', 'Signed in successfully');
           navigate('/dashboard-binance');
         } else {
           showToast('error', 'User not found');
@@ -52,7 +49,7 @@ export default function SignIn() {
         showToast('error', 'Verification failed');
       }
     } catch (err) {
-      showToast('error', err?.response?.data?.error || 'Verify failed');
+      showToast('error', err?.response?.data?.error || 'Sign-in failed');
     } finally {
       setLoadingVerify(false);
     }
