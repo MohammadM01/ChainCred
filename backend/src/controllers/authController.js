@@ -1,3 +1,4 @@
+// backend/controllers/authController.js
 const User = require('../models/User');
 const { verifySignature } = require('../utils/authUtils');
 const ethers = require('ethers');
@@ -6,6 +7,7 @@ const ethers = require('ethers');
  * Auth controllers for ChainCred.
  * register: Creates a new user with wallet, role, name.
  * verifyWallet: Verifies signature against wallet.
+ * getUser: Fetches user by wallet address.
  * Validation: Checks if address is valid EVM address.
  * Role-based: No restrictions here; restrictions in upload/mint.
  * Responses: Uniform JSON format.
@@ -57,10 +59,36 @@ const verifyWallet = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Invalid signature' });
     }
 
-    res.json({ success: true, data: { verified: true } });
+    // Check if user exists
+    const user = await User.findOne({ wallet: wallet.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({ success: true, data: { verified: true, user } });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
-module.exports = { register, verifyWallet };
+// GET /api/auth/user/:wallet
+const getUser = async (req, res) => {
+  try {
+    const { wallet } = req.params;
+
+    if (!ethers.isAddress(wallet)) {
+      return res.status(400).json({ success: false, error: 'Invalid EVM wallet address' });
+    }
+
+    const user = await User.findOne({ wallet: wallet.toLowerCase() });
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    res.json({ success: true, data: { user } });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+module.exports = { register, verifyWallet, getUser };
