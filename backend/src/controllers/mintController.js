@@ -47,18 +47,28 @@ const mintCertificate = async (req, res) => {
     const mintResult = await mint(studentWallet, metadataUrl);
     console.log('Mint result:', mintResult);
 
-    // Update DB with tokenId
-    const certificate = await Certificate.findOneAndUpdate(
-      { metadataUrl },
-      { tokenId: mintResult.tokenId },
-      { new: true }
-    );
+    // Update DB with tokenId (if available)
+    if (mintResult.tokenId) {
+      const certificate = await Certificate.findOneAndUpdate(
+        { metadataUrl },
+        { tokenId: mintResult.tokenId },
+        { new: true }
+      );
 
-    if (!certificate) {
-      return res.status(404).json({ success: false, error: 'Certificate not found for update' });
+      if (!certificate) {
+        return res.status(404).json({ success: false, error: 'Certificate not found for update' });
+      }
     }
 
-    res.json({ success: true, data: { txHash: mintResult.txHash, tokenId: mintResult.tokenId } });
+    // Return success response
+    res.json({ 
+      success: true, 
+      data: { 
+        txHash: mintResult.txHash, 
+        tokenId: mintResult.tokenId,
+        note: mintResult.note || null
+      } 
+    });
   } catch (error) {
     console.error('Mint error:', error);
     res.status(500).json({ success: false, error: error.message });
