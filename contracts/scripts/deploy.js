@@ -9,9 +9,10 @@ async function main() {
   const contract = await SoulboundCredential.deploy(deployer.address);
 
   // Wait for deployment to be mined
-  await contract.waitForDeployment();  // This is for ethers v6; if using ethers v5, use contract.deployed()
+  await contract.deployed();
+  // This is for ethers v6; if using ethers v5, use contract.deployed()
 
-  console.log("SoulboundCredential deployed to:", await contract.getAddress());
+  console.log("Contract deployed to:", contract.address);
 }
 
 main()
