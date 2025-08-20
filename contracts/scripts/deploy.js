@@ -5,9 +5,12 @@ async function main() {
   console.log("Deploying contracts with the account:", deployer.address);
 
   const SoulboundCredential = await ethers.getContractFactory("SoulboundCredential");
+  // If your contract constructor requires the deployer's address, pass it; otherwise, remove this argument
   const contract = await SoulboundCredential.deploy(deployer.address);
 
-  await contract.waitForDeployment();
+  // Wait for deployment to be mined
+  await contract.waitForDeployment();  // This is for ethers v6; if using ethers v5, use contract.deployed()
+
   console.log("SoulboundCredential deployed to:", await contract.getAddress());
 }
 
