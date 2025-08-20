@@ -5,7 +5,7 @@ const authRoutes = require('./routes/auth');
 const uploadRoutes = require('./routes/upload');
 const mintRoutes = require('./routes/mint');
 const verifyRoutes = require('./routes/verify');
-
+const resumeRoutes = require('./routes/resume');
 const app = express();
 
 /**
@@ -38,6 +38,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/mint', mintRoutes);
 app.use('/api/verify', verifyRoutes);
+app.use('/api/resume', resumeRoutes);
 
 // Demo metadata route (serves seeded demo metadata) - removable for production
 app.get('/demo/metadata/:id', (req, res) => {

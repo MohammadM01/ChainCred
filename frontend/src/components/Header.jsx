@@ -35,6 +35,14 @@ export default function Header() {
           >
             Profile
           </Link>
+          {user && user.role === 'student' && ( // NEW: Conditional for student only
+            <Link 
+              to="/resume-builder" 
+              className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold"
+            >
+              Resume
+            </Link>
+          )}
           {user && (
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-2 text-sm bg-[#f3ba2f] text-black rounded-full px-3 py-1 shadow hover:shadow-yellow-400/50 transition-shadow">

@@ -1,5 +1,6 @@
 import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import ResumeBuilder from './pages/ResumeBuilder';
 
 const LandingPage = lazy(() => import('./pages/LandingPage'));
 const ProLanding = lazy(() => import('./pages/ProLanding'));
@@ -25,6 +26,7 @@ export default function App() {
         <Route path="/verify" element={<VerifyPage />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/sign-in" element={<SignIn />} />
+        <Route path="/resume-builder" element={<ResumeBuilder />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
