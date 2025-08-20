@@ -63,11 +63,14 @@ const uploadCertificate = async (req, res) => {
     });
     await certificate.save();
 
+    console.log('Certificate saved to database:', certificate._id);
+
     res.json({
       success: true,
       data: { metadataUrl, fileHash, certificateID: metadata.certificateID },
     });
   } catch (error) {
+    console.error('Upload error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };

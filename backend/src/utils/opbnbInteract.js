@@ -17,15 +17,37 @@ const getContract = () => new ethers.Contract(
     'function mint(address to, string memory metadataURI) returns (uint256)',
     'function verify(address owner, uint256 tokenId) view returns (bool)',
     'function tokenURI(uint256 tokenId) view returns (string)',
+    // Add the Transfer event signature:
+    'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
   ],
   getSigner()
 );
+
+const TRANSFER_EVENT_TOPIC = ethers.id("Transfer(address,address,uint256)");
 
 const mint = async (to, metadataURI) => {
   const contract = getContract();
   const tx = await contract.mint(to, metadataURI);
   const receipt = await tx.wait();
-  const tokenId = receipt.logs[0].args.tokenId; // Parse from event or counter if needed
+
+  // Debug: print all logs
+  console.log('Transaction receipt logs:', JSON.stringify(receipt.logs, null, 2));
+
+  // Filter logs for Transfer event from this contract
+  const transferLog = receipt.logs.find(
+    log =>
+      log.address.toLowerCase() === contract.target.toLowerCase() &&
+      log.topics[0] === TRANSFER_EVENT_TOPIC
+  );
+
+  if (!transferLog) {
+    throw new Error('Transfer event not found in transaction logs');
+  }
+
+  // Decode the event using the contract interface
+  const parsed = contract.interface.parseLog(transferLog);
+  const tokenId = parsed.args.tokenId.toString();
+
   return { txHash: receipt.hash, tokenId };
 };
 

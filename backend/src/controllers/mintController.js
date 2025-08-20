@@ -31,8 +31,21 @@ const mintCertificate = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only institutes can mint' });
     }
 
+    // Check if certificate exists and hasn't been minted yet
+    const existingCertificate = await Certificate.findOne({ metadataUrl });
+    if (!existingCertificate) {
+      return res.status(404).json({ success: false, error: 'Certificate not found. Please upload first.' });
+    }
+    
+    if (existingCertificate.tokenId) {
+      return res.status(400).json({ success: false, error: 'Certificate already minted' });
+    }
+
+    console.log('Minting certificate:', { studentWallet, metadataUrl, issuerWallet });
+
     // Mint on opBNB
     const mintResult = await mint(studentWallet, metadataUrl);
+    console.log('Mint result:', mintResult);
 
     // Update DB with tokenId
     const certificate = await Certificate.findOneAndUpdate(
@@ -47,6 +60,7 @@ const mintCertificate = async (req, res) => {
 
     res.json({ success: true, data: { txHash: mintResult.txHash, tokenId: mintResult.tokenId } });
   } catch (error) {
+    console.error('Mint error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 };
