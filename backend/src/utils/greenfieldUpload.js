@@ -34,8 +34,12 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Generate mock URL and hash
+    // Using a publicly accessible URL structure for testing
     const mockUrl = `https://gnfd-testnet-sp1.bnbchain.org/view/${bucketName}/${uniqueObjectName}`;
     const hash = crypto.createHash('sha256').update(body).digest('hex');
+    
+    // For now, we'll create a simple public access URL
+    // In production, this should use proper Greenfield SDK with public read permissions
 
     console.log(`Mock upload successful`);
     console.log(`Mock URL: ${mockUrl}`);

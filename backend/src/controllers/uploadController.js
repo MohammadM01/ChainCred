@@ -60,6 +60,7 @@ const uploadCertificate = async (req, res) => {
       metadataUrl,
       fileHash,
       issuedDate: new Date(metadata.issuedDateISO),
+      status: 'pending'
     });
     await certificate.save();
 

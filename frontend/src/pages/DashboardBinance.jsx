@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useUser } from '../context/UserContext';
@@ -7,7 +6,6 @@ import axios from '../utils/api';
 
 export default function DashboardBinance() {
   const { user, showToast, loading } = useUser();
-  const navigate = useNavigate();
   const role = useMemo(() => user?.role, [user]);
 
   if (!user || loading) {
@@ -55,8 +53,8 @@ function InstitutePanel({ user, showToast }) {
 
   async function loadIssued() {
     try {
-      const res = await axios.get(`/api/verify?issuerWallet=${user.wallet}`);
-      setIssued(res.data?.data?.items || res.data?.data || []);
+      const res = await axios.get(`/api/certificates/institute/${user.wallet}`);
+      setIssued(res.data?.data || []);
     } catch {
       setIssued([]);
     }
@@ -162,6 +160,11 @@ function InstitutePanel({ user, showToast }) {
                 </a>
               </div>
             )}
+            {uploadResult.tokenId && (
+              <div className="mt-2 text-green-400">
+                Token ID: #{uploadResult.tokenId}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -172,9 +175,13 @@ function InstitutePanel({ user, showToast }) {
           {issued?.length ? (
             issued.map((it, idx) => (
               <div key={idx} className="py-3 text-sm">
-                <div className="font-mono text-[#f3ba2f]">{it?.metadata?.certificateID || it?.certificateID}</div>
-                <div className="text-gray-400">Student: {it?.metadata?.studentWallet || it?.studentWallet}</div>
-                <div className="text-gray-400">Date: {it?.metadata?.issuedDateISO || '-'}</div>
+                <div className="font-mono text-[#f3ba2f]">{it?.certificateID}</div>
+                <div className="text-gray-400">Student: {it?.studentWallet}</div>
+                <div className="text-gray-400">Date: {new Date(it?.issuedDate).toLocaleDateString()}</div>
+                <div className="text-gray-400">Status: {it?.status || 'pending'}</div>
+                {it?.tokenId && (
+                  <div className="text-green-400">Token ID: #{it.tokenId}</div>
+                )}
               </div>
             ))
           ) : (
@@ -192,8 +199,8 @@ function StudentPanel({ user }) {
   useEffect(() => {
     (async () => {
       try {
-        const res = await axios.get(`/api/verify?studentWallet=${user.wallet}`);
-        setItems(res.data?.data?.items || res.data?.data || []);
+        const res = await axios.get(`/api/certificates/student/${user.wallet}`);
+        setItems(res.data?.data || []);
       } catch {
         setItems([]);
       }
@@ -207,33 +214,32 @@ function StudentPanel({ user }) {
         {items?.length ? (
           items.map((it, idx) => (
             <div key={idx} className="p-4 rounded border border-gray-800">
-              <div className="font-mono text-[#f3ba2f]">{it?.metadata?.certificateID || it?.certificateID}</div>
-              <div className="text-sm text-gray-400">Issuer: {it?.metadata?.issuerWallet}</div>
-              <div className="text-sm text-gray-400">Date: {it?.metadata?.issuedDateISO}</div>
+              <div className="font-mono text-[#f3ba2f]">{it?.certificateID}</div>
+              <div className="text-sm text-gray-400">Issuer: {it?.issuerWallet}</div>
+              <div className="text-sm text-gray-400">Date: {new Date(it?.issuedDate).toLocaleDateString()}</div>
+              <div className="text-sm text-gray-400">Status: {it?.status || 'pending'}</div>
+              {it?.tokenId && (
+                <div className="text-sm text-green-400">Token ID: #{it.tokenId}</div>
+              )}
               <div className="mt-2 flex gap-3 text-sm">
-                {it?.metadata?.fileUrl && (
-                  <a className="text-[#f3ba2f]" href={it.metadata.fileUrl} target="_blank" rel="noreferrer">
+                {it?.fileUrl && (
+                  <a className="text-[#f3ba2f]" href={it.fileUrl} target="_blank" rel="noreferrer">
                     PDF
                   </a>
                 )}
-                {it?.metadata && (
-                  <a
-                    className="text-[#f3ba2f]"
-                    href={`data:application/json,${encodeURIComponent(JSON.stringify(it.metadata))}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
+                {it?.metadataUrl && (
+                  <a className="text-[#f3ba2f]" href={it.metadataUrl} target="_blank" rel="noreferrer">
                     Metadata
                   </a>
                 )}
-                {it?.metadata?.txHash && (
+                {it?.txHash && (
                   <a
                     className="text-[#f3ba2f]"
-                    href={`https://explorer.testnet.opbnb.io/tx/${it.metadata.txHash}`}
+                    href={`https://explorer.testnet.opbnb.io/tx/${it.txHash}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    Tx
+                    View on Explorer
                   </a>
                 )}
               </div>

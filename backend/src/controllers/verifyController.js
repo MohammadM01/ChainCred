@@ -15,10 +15,10 @@ const axios = require('axios'); // For fetching metadata; install if needed
 // GET /api/verify
 const verifyCertificate = async (req, res) => {
   try {
-    const { certificateID, studentWallet } = req.query;
+    const { certificateID, studentWallet, issuerWallet, tokenId } = req.query;
 
-    if (!certificateID && !studentWallet) {
-      return res.status(400).json({ success: false, error: 'certificateID or studentWallet is required' });
+    if (!certificateID && !studentWallet && !tokenId) {
+      return res.status(400).json({ success: false, error: 'certificateID, studentWallet, or tokenId is required' });
     }
 
     let certificate;
@@ -26,31 +26,33 @@ const verifyCertificate = async (req, res) => {
       certificate = await Certificate.findOne({ certificateID });
     } else if (studentWallet) {
       certificate = await Certificate.findOne({ studentWallet: studentWallet.toLowerCase() });
+    } else if (tokenId) {
+      certificate = await Certificate.findOne({ tokenId: parseInt(tokenId) });
     }
 
     if (!certificate) {
       return res.status(404).json({ success: false, error: 'Certificate not found' });
     }
 
-    const { tokenId, metadataUrl, studentWallet: dbStudent, issuerWallet, fileHash, issuedDate } = certificate;
-      if (!tokenId) {
+    const { metadataUrl, studentWallet: dbStudent, fileHash, issuedDate } = certificate;
+      if (!certificate.tokenId) {
         return res.status(400).json({ success: false, error: 'Certificate not minted yet' });
       }
 
       // If this is a local demo metadata URL, skip on-chain checks (no contract required)
       const isDemo = typeof metadataUrl === 'string' && metadataUrl.includes('/demo/metadata/');
       if (!isDemo) {
-        // Check on-chain ownership
-        const isOwner = await verify(dbStudent, tokenId);
-        if (!isOwner) {
-          return res.json({ success: true, data: { valid: false, details: 'Ownership mismatch on chain' } });
-        }
+              // Check on-chain ownership
+      const isOwner = await verify(dbStudent, certificate.tokenId);
+      if (!isOwner) {
+        return res.json({ success: true, data: { valid: false, details: 'Ownership mismatch on chain' } });
+      }
 
-        // Check tokenURI matches metadataUrl
-        const chainMetadataUrl = await getTokenURI(tokenId);
-        if (chainMetadataUrl !== metadataUrl) {
-          return res.json({ success: true, data: { valid: false, details: 'Metadata URL mismatch on chain' } });
-        }
+      // Check tokenURI matches metadataUrl
+      const chainMetadataUrl = await getTokenURI(certificate.tokenId);
+      if (chainMetadataUrl !== metadataUrl) {
+        return res.json({ success: true, data: { valid: false, details: 'Metadata URL mismatch on chain' } });
+      }
       } else {
         // demo: proceed without chain verification
       }
@@ -62,7 +64,7 @@ const verifyCertificate = async (req, res) => {
     // Recompute hash
     const recomputedID = crypto
       .createHash('sha256')
-      .update(dbStudent + issuerWallet + fileHash + issuedDate.toISOString())
+      .update(dbStudent + certificate.issuerWallet + fileHash + issuedDate.toISOString())
       .digest('hex');
 
     const valid = recomputedID === certificate.certificateID && recomputedID === fetchedMetadata.certificateID;

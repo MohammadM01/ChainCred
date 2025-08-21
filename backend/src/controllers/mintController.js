@@ -51,13 +51,23 @@ const mintCertificate = async (req, res) => {
     if (mintResult.tokenId) {
       const certificate = await Certificate.findOneAndUpdate(
         { metadataUrl },
-        { tokenId: mintResult.tokenId },
+        { 
+          tokenId: mintResult.tokenId,
+          txHash: mintResult.txHash,
+          mintedAt: new Date(),
+          status: 'minted'
+        },
         { new: true }
       );
 
       if (!certificate) {
+        console.error('Certificate not found for update with metadataUrl:', metadataUrl);
         return res.status(404).json({ success: false, error: 'Certificate not found for update' });
       }
+      
+      console.log('Database updated successfully with tokenId:', mintResult.tokenId);
+    } else {
+      console.error('No tokenId received from mint operation');
     }
 
     // Return success response

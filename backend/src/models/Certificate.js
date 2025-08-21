@@ -42,6 +42,19 @@ const certificateSchema = new mongoose.Schema({
     type: Number,
     default: null, // Updated during mint
   },
+  txHash: {
+    type: String,
+    default: null, // Transaction hash from minting
+  },
+  mintedAt: {
+    type: Date,
+    default: null, // When the certificate was minted
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'minted', 'verified'],
+    default: 'pending'
+  },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Certificate', certificateSchema);
