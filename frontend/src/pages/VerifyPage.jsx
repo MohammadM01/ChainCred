@@ -63,7 +63,7 @@ export default function VerifyPage(){
                 <div>Issued: {result.metadata?.issuedDateISO}</div>
                 <div>CertificateID: {result.metadata?.certificateID}</div>
                 <a className="text-yellow-400" href={result.metadata?.fileUrl} target="_blank" rel="noreferrer">Open PDF</a>
-                <div>Tx: <a className="text-yellow-400" href={`https://explorer.testnet.opbnb.io/tx/${result.metadata?.txHash}`} target="_blank" rel="noreferrer">View on opBNB</a></div>
+                <div>Tx: <a className="text-yellow-400" href={`https://opbnb-testnet.bscscan.com/tx/${result.metadata?.txHash}`} target="_blank" rel="noreferrer">View on opBNB</a></div>
               </div>
             ) : (
               <div className="bg-red-900 p-4 rounded">❌ Credential not found / invalid — {result.error}</div>

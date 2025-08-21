@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// Preserve auth session across PDF/QR modals and navigation
+axios.defaults.withCredentials = true;
+
 const envBase = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
 const BASE_URL = envBase || 'http://localhost:5000';
 

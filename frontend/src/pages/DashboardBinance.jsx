@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import QRCode from 'qrcode';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useUser } from '../context/UserContext';
@@ -255,6 +256,7 @@ function StudentPanel({ user }) {
   const [filterStatus, setFilterStatus] = useState('all');
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDFUrl, setCurrentPDFUrl] = useState('');
+  const [qrFor, setQrFor] = useState(null); // data URL
 
   useEffect(() => {
     (async () => {
@@ -281,6 +283,13 @@ function StudentPanel({ user }) {
     // Use the correct opBNB explorer URL
     const explorerUrl = `https://opbnb-testnet.bscscan.com/tx/${txHash}`;
     window.open(explorerUrl, '_blank');
+  };
+
+  const openQR = async (cert) => {
+    // Prefer verify URL; fallback to explorer
+    const verifyUrl = `${window.location.origin}/verify?certificateID=${cert.certificateID}`;
+    const encoded = await QRCode.toDataURL(verifyUrl, { width: 320, margin: 1 });
+    setQrFor({ img: encoded, verifyUrl, tx: cert.txHash });
   };
 
   const filteredItems = items.filter(item => {
@@ -389,12 +398,14 @@ function StudentPanel({ user }) {
                   </button>
                 )}
                 {it?.metadataUrl && (
-                  <button 
-                    onClick={() => handleViewMetadata(it.metadataUrl)}
-                    className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors"
+                  <a 
+                    href={it.metadataUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors inline-flex items-center justify-center"
                   >
                     📋 Metadata
-                  </button>
+                  </a>
                 )}
                 {it?.txHash && (
                   <button
@@ -404,6 +415,12 @@ function StudentPanel({ user }) {
                     🔗 Explorer
                   </button>
                 )}
+                <button
+                  onClick={() => openQR(it)}
+                  className="px-3 py-1 text-xs bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors"
+                >
+                  🔳 QR
+                </button>
               </div>
             </div>
           ))
@@ -424,6 +441,23 @@ function StudentPanel({ user }) {
             setCurrentPDFUrl('');
           }}
         />
+      )}
+
+      {/* QR Modal */}
+      {qrFor && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 w-full max-w-sm text-center">
+            <h4 className="text-lg font-semibold text-white mb-4">Scan to Verify</h4>
+            <img src={qrFor.img} alt="QR" className="mx-auto mb-4 rounded bg-white p-2" />
+            <a href={qrFor.verifyUrl} target="_blank" rel="noreferrer" className="block text-[#f3ba2f] mb-2 break-all">{qrFor.verifyUrl}</a>
+            {qrFor.tx && (
+              <a href={`https://opbnb-testnet.bscscan.com/tx/${qrFor.tx}`} target="_blank" rel="noreferrer" className="block text-blue-400 break-all">View on opBNB</a>
+            )}
+            <div className="mt-4">
+              <button onClick={() => setQrFor(null)} className="px-4 py-2 rounded bg-[#f3ba2f] text-black">Close</button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );
