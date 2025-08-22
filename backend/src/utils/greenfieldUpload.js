@@ -9,22 +9,53 @@ const crypto = require('crypto');
  */
 const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = false) => {
   try {
+    // Debug environment variables
+    console.log('Environment check:', {
+      GREENFIELD_USE_LOCAL: process.env.GREENFIELD_USE_LOCAL,
+      GREENFIELD_BUCKET_NAME: process.env.GREENFIELD_BUCKET_NAME ? 'SET' : 'NOT SET',
+      GREENFIELD_API_KEY: process.env.GREENFIELD_API_KEY ? 'SET' : 'NOT SET',
+      PORT: process.env.PORT,
+      PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL
+    });
+
     const body = Buffer.isBuffer(filePathOrBuffer) ? filePathOrBuffer : fs.readFileSync(filePathOrBuffer);
     const timestamp = Date.now();
     const uniqueName = `${timestamp}-${objectName}`;
 
-    if (process.env.GREENFIELD_USE_LOCAL === 'true') {
+    // Check if we should use local fallback (default to true if not set)
+    const useLocal = process.env.GREENFIELD_USE_LOCAL !== 'false';
+    
+    if (useLocal) {
+      console.log('Using local fallback for file upload');
+      
       const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-      if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+        console.log('Created uploads directory:', uploadsDir);
+      }
 
       const filePath = path.join(uploadsDir, uniqueName);
       fs.writeFileSync(filePath, body);
+      console.log('File saved locally:', filePath);
 
       const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
       const publicUrl = `${base}/files/${encodeURIComponent(uniqueName)}`;
 
       const hash = crypto.createHash('sha256').update(body).digest('hex');
+      console.log('Local upload successful:', { url: publicUrl, hash });
+      
       return { url: publicUrl, hash };
+    }
+
+    // Only try to use real Greenfield SDK if not using local fallback
+    console.log('Attempting real Greenfield SDK upload...');
+    
+    // Check if required environment variables are set
+    const bucketName = process.env.GREENFIELD_BUCKET_NAME;
+    const privateKey = process.env.GREENFIELD_API_KEY;
+    
+    if (!bucketName || !privateKey) {
+      throw new Error('GREENFIELD_BUCKET_NAME and GREENFIELD_API_KEY are required for real Greenfield upload');
     }
 
     // Real Greenfield SDK path (ESM). Node needs --experimental-specifier-resolution=node for subpath resolution
@@ -36,11 +67,6 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
 
     const grpcUrl = process.env.GNFD_GRPC_URL || 'https://gnfd-testnet-sp1.bnbchain.org';
     const chainId = process.env.GNFD_CHAIN_ID ? Number(process.env.GNFD_CHAIN_ID) : 5600;
-    const bucketName = process.env.GREENFIELD_BUCKET_NAME;
-    const privateKey = process.env.GREENFIELD_API_KEY;
-    if (!bucketName || !privateKey) {
-      throw new Error('GREENFIELD_BUCKET_NAME and GREENFIELD_API_KEY are required');
-    }
 
     const client = Client.create(grpcUrl, chainId);
 
@@ -126,10 +152,39 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
     const baseEndpoint = (sp.endpoint || grpcUrl).replace(/\/$/, '');
     const url = `${baseEndpoint}/view/${bucketName}/${encodeURIComponent(uniqueName)}`;
     const hash = crypto.createHash('sha256').update(body).digest('hex');
+    
+    console.log('Real Greenfield upload successful:', { url, hash });
     return { url, hash };
   } catch (error) {
-    console.error('Mock Greenfield upload error:', error);
-    throw new Error(`Mock Greenfield upload failed: ${error.message}`);
+    console.error('Greenfield upload error:', error);
+    
+    // Always try to use local storage as a fallback
+    console.log('Falling back to local storage due to Greenfield SDK error...');
+    
+    try {
+      const body = Buffer.isBuffer(filePathOrBuffer) ? filePathOrBuffer : fs.readFileSync(filePathOrBuffer);
+      const timestamp = Date.now();
+      const uniqueName = `${timestamp}-${objectName}`;
+      
+      const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+
+      const filePath = path.join(uploadsDir, uniqueName);
+      fs.writeFileSync(filePath, body);
+
+      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const publicUrl = `${base}/files/${encodeURIComponent(uniqueName)}`;
+
+      const hash = crypto.createHash('sha256').update(body).digest('hex');
+      console.log('Fallback local upload successful:', { url: publicUrl, hash });
+      
+      return { url: publicUrl, hash };
+    } catch (fallbackError) {
+      console.error('Fallback local upload also failed:', fallbackError);
+      throw new Error(`Both Greenfield and local upload failed. Greenfield error: ${error.message}, Local error: ${fallbackError.message}`);
+    }
   }
 };
 

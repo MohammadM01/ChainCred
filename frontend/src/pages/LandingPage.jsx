@@ -90,7 +90,13 @@ export default function LandingPage() {
             </form>
             <div className="mt-4">
               {result && (result.valid
-                ? <div className="text-green-400 font-semibold">✅ Valid credential — {result.metadata?.certificateID}</div>
+                ? <div className="text-green-400 font-semibold">
+                    ✅ Valid credential — {result.metadata?.certificateID}
+                    <div className="text-sm text-gray-300 mt-1">
+                      Student: {result.metadata?.studentName || 'Unknown'} | 
+                      Issuer: {result.metadata?.issuerName || 'Unknown'}
+                    </div>
+                  </div>
                 : <div className="text-red-400 font-semibold">❌ Invalid — {result.error || 'Not found'}</div>)}
             </div>
           </div>

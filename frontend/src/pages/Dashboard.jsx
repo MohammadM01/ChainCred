@@ -117,6 +117,7 @@ export default function Dashboard(){
                 <thead className="text-gray-400">
                   <tr>
                     <th className="py-2">CertificateID</th>
+                    <th>Student Name</th>
                     <th>Student Wallet</th>
                     <th>Tx Hash</th>
                     <th>Date</th>
@@ -127,7 +128,8 @@ export default function Dashboard(){
                   {issued?.length ? issued.map((it, idx)=> (
                     <tr key={idx} className="border-t border-gray-800">
                       <td className="py-2">{it?.metadata?.certificateID || it?.certificateID}</td>
-                      <td>{it?.metadata?.studentWallet || it?.studentWallet}</td>
+                      <td className="text-yellow-400 font-medium">{it?.metadata?.studentName || it?.studentName || 'Unknown'}</td>
+                      <td className="font-mono text-gray-300">{it?.metadata?.studentWallet || it?.studentWallet}</td>
                       <td>
                         {it?.metadata?.txHash ? (
                           <a className="text-yellow-400" href={`https://explorer.testnet.opbnb.io/tx/${it.metadata.txHash}`} target="_blank" rel="noreferrer">{it.metadata.txHash.slice(0,10)}...</a>
@@ -137,7 +139,7 @@ export default function Dashboard(){
                       <td>{it?.valid === false ? 'Invalid' : 'Valid'}</td>
                     </tr>
                   )) : (
-                    <tr><td className="py-3" colSpan="5">No items</td></tr>
+                    <tr><td className="py-3" colSpan="6">No items</td></tr>
                   )}
                 </tbody>
               </table>
@@ -159,7 +161,10 @@ export default function Dashboard(){
               {myCreds?.length ? myCreds.map((it, idx)=> (
                 <div key={idx} className="border border-gray-800 rounded p-4">
                   <div className="font-mono text-yellow-400">{it?.metadata?.certificateID || it?.certificateID}</div>
-                  <div className="text-sm text-gray-300 mt-1">Issuer: {it?.metadata?.issuerWallet}</div>
+                  <div className="text-sm text-gray-300 mt-1">
+                    Issuer: <span className="text-yellow-400 font-medium">{it?.metadata?.issuerName || 'Unknown'}</span>
+                    <span className="text-gray-500 ml-2">({it?.metadata?.issuerWallet})</span>
+                  </div>
                   <div className="text-sm text-gray-300">Date: {it?.metadata?.issuedDateISO}</div>
                   <div className="mt-2 flex gap-3 text-sm">
                     {it?.metadata?.fileUrl && <a className="text-yellow-400" href={it.metadata.fileUrl} target="_blank" rel="noreferrer">PDF</a>}

@@ -2,6 +2,7 @@ const Certificate = require('../models/Certificate');
 const { verify, getTokenURI } = require('../utils/opbnbInteract');
 const crypto = require('crypto');
 const axios = require('axios'); // For fetching metadata; install if needed
+const User = require('../models/User'); // Added for user names
 
 /**
  * Verify controller for ChainCred (public).
@@ -61,6 +62,10 @@ const verifyCertificate = async (req, res) => {
     const response = await axios.get(metadataUrl);
     const fetchedMetadata = response.data;
 
+    // Get user names for better UX
+    const studentUser = await User.findOne({ wallet: dbStudent.toLowerCase() });
+    const issuerUser = await User.findOne({ wallet: certificate.issuerWallet.toLowerCase() });
+
     // Recompute hash
     const recomputedID = crypto
       .createHash('sha256')
@@ -69,9 +74,24 @@ const verifyCertificate = async (req, res) => {
 
     const valid = recomputedID === certificate.certificateID && recomputedID === fetchedMetadata.certificateID;
 
+    // Add user names to the response
+    const responseData = {
+      valid,
+      details: valid ? 'Certificate verified' : 'Hash mismatch',
+      metadata: {
+        ...fetchedMetadata,
+        studentName: studentUser?.name || 'Unknown Student',
+        issuerName: issuerUser?.name || 'Unknown Institute'
+      },
+      certificateID: certificate.certificateID,
+      studentWallet: dbStudent,
+      issuerWallet: certificate.issuerWallet,
+      issuedDate: issuedDate.toISOString()
+    };
+
     res.json({
       success: true,
-      data: { valid, details: valid ? 'Certificate verified' : 'Hash mismatch', metadata: fetchedMetadata },
+      data: responseData,
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });

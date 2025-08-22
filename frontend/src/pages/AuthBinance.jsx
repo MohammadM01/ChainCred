@@ -33,9 +33,10 @@ export default function AuthBinance() {
 
   async function register() {
     if (!wallet) return showToast('error', 'Connect your wallet');
+    if (!name.trim()) return showToast('error', 'Please enter your name');
     setLoadingRegister(true);
     try {
-      const res = await axios.post(`/api/auth/register`, { wallet, role, name });
+      const res = await axios.post(`/api/auth/register`, { wallet, role, name: name.trim() });
       const nextUser = res.data?.data?.user || res.data?.user;
       if (nextUser) {
         setUser(nextUser);
@@ -96,12 +97,20 @@ export default function AuthBinance() {
 
               {/* Name + Register */}
               <div className="mt-6">
-                <input
-                  className="w-full p-3 rounded-lg bg-black border border-gray-700 placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-[#f3ba2f] transition"
-                  placeholder="Name (optional)"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
+                <div className="relative">
+                  <input
+                    className={`w-full p-3 rounded-lg bg-black border placeholder-gray-500 text-white focus:outline-none focus:ring-2 transition ${
+                      name.trim() ? 'border-gray-700 focus:ring-[#f3ba2f]' : 'border-red-500 focus:ring-red-500'
+                    }`}
+                    placeholder="Name (required)"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
+                  {!name.trim() && (
+                    <div className="text-red-400 text-sm mt-1">Name is required</div>
+                  )}
+                </div>
                 <div className="mt-6 flex justify-between items-center">
                   <button
                     onClick={() => navigate('/sign-in')}
@@ -112,7 +121,7 @@ export default function AuthBinance() {
                   <button
                     onClick={register}
                     className="px-6 py-2 rounded-lg font-semibold bg-[#f3ba2f] text-black hover:bg-[#e0a923] transition-transform transform hover:scale-105 disabled:opacity-60"
-                    disabled={loadingRegister || !wallet}
+                    disabled={loadingRegister || !wallet || !name.trim()}
                   >
                     {loadingRegister ? 'Saving…' : 'Register'}
                   </button>

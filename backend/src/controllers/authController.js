@@ -18,12 +18,17 @@ const register = async (req, res) => {
   try {
     const { wallet, role, name } = req.body;
 
-    if (!wallet || !role) {
-      return res.status(400).json({ success: false, error: 'Wallet and role are required' });
+    if (!wallet || !role || !name) {
+      return res.status(400).json({ success: false, error: 'Wallet, role, and name are required' });
     }
 
     if (!ethers.isAddress(wallet)) {
       return res.status(400).json({ success: false, error: 'Invalid EVM wallet address' });
+    }
+
+    // Validate name is not empty
+    if (!name.trim()) {
+      return res.status(400).json({ success: false, error: 'Name cannot be empty' });
     }
 
     const existingUser = await User.findOne({ wallet: wallet.toLowerCase() });
@@ -31,7 +36,7 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, error: 'User already exists' });
     }
 
-    const user = new User({ wallet: wallet.toLowerCase(), role, name });
+    const user = new User({ wallet: wallet.toLowerCase(), role, name: name.trim() });
     await user.save();
 
     res.status(201).json({ success: true, data: { user } });

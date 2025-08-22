@@ -27,8 +27,12 @@ class NetworkingAgent {
         .populate('issuerWallet', 'name role')
         .lean();
 
+      // Also fetch all users to get names
+      const users = await User.find({}).lean();
+      const userMap = new Map(users.map(user => [user.wallet.toLowerCase(), user]));
+
       // Build skill graph
-      await this.buildSkillGraph(certificates);
+      await this.buildSkillGraph(certificates, userMap);
       
       // Generate recommendations
       const recommendations = this.generateRecommendations();
@@ -59,8 +63,9 @@ class NetworkingAgent {
   /**
    * Build skill graph from certificates
    * @param {Array} certificates - Array of certificate documents
+   * @param {Map} userMap - Map of wallet addresses to user objects
    */
-  async buildSkillGraph(certificates) {
+  async buildSkillGraph(certificates, userMap) {
     this.skillGraph.clear();
     
     for (const cert of certificates) {
@@ -69,6 +74,10 @@ class NetworkingAgent {
       
       if (!studentWallet || !issuerWallet) continue;
 
+      // Get user names
+      const studentUser = userMap.get(studentWallet.toLowerCase());
+      const issuerUser = userMap.get(issuerWallet.toLowerCase());
+
       // Extract skills from certificate metadata or generate based on issuer
       const skills = this.extractSkillsFromCertificate(cert);
       
@@ -76,6 +85,8 @@ class NetworkingAgent {
       if (!this.skillGraph.has(studentWallet)) {
         this.skillGraph.set(studentWallet, {
           wallet: studentWallet,
+          name: studentUser?.name || 'Unknown User',
+          role: studentUser?.role || 'unknown',
           skills: new Set(),
           certificates: [],
           institutes: new Set(),
@@ -85,7 +96,21 @@ class NetworkingAgent {
 
       const studentNode = this.skillGraph.get(studentWallet);
       studentNode.certificates.push(cert.certificateID);
-      studentNode.institutes.add(issuerWallet);
+      
+      // Add institute with name
+      if (issuerUser) {
+        studentNode.institutes.add({
+          wallet: issuerWallet,
+          name: issuerUser.name,
+          role: issuerUser.role
+        });
+      } else {
+        studentNode.institutes.add({
+          wallet: issuerWallet,
+          name: 'Unknown Institute',
+          role: 'unknown'
+        });
+      }
       
       // Add skills
       skills.forEach(skill => studentNode.skills.add(skill));
@@ -167,14 +192,22 @@ class NetworkingAgent {
         );
 
         // Find common institutes
-        const commonInstitutes = studentA.institutes.filter(institute => 
-          studentB.institutes.includes(institute)
+        const commonInstitutes = studentA.institutes.filter(instituteA => 
+          studentB.institutes.some(instituteB => instituteB.wallet === instituteA.wallet)
         );
 
         if (commonSkills.length > 0 || commonInstitutes.length > 0) {
           const recommendation = {
-            studentA: studentA.wallet,
-            studentB: studentB.wallet,
+            studentA: {
+              wallet: studentA.wallet,
+              name: studentA.name,
+              role: studentA.role
+            },
+            studentB: {
+              wallet: studentB.wallet,
+              name: studentB.name,
+              role: studentB.role
+            },
             commonSkills: commonSkills,
             commonInstitutes: commonInstitutes,
             connectionStrength: this.calculateConnectionStrength(commonSkills, commonInstitutes),
@@ -220,14 +253,14 @@ class NetworkingAgent {
    * @returns {string} Recommendation text
    */
   generateRecommendationText(studentA, studentB, commonSkills, commonInstitutes) {
-    let text = `Students ${studentA.wallet.slice(0, 8)}... and ${studentB.wallet.slice(0, 8)}... `;
+    let text = `${studentA.name} and ${studentB.name} `;
     
     if (commonSkills.length > 0 && commonInstitutes.length > 0) {
-      text += `both have ${commonSkills.join(', ')} certificates from ${commonInstitutes.join(', ')}.`;
+      text += `both have ${commonSkills.join(', ')} certificates from ${commonInstitutes.map(inst => inst.name).join(', ')}.`;
     } else if (commonSkills.length > 0) {
       text += `share similar skills: ${commonSkills.join(', ')}.`;
     } else if (commonInstitutes.length > 0) {
-      text += `both attended ${commonInstitutes.join(', ')}.`;
+      text += `both attended ${commonInstitutes.map(inst => inst.name).join(', ')}.`;
     }
     
     text += ` Consider connecting for collaboration!`;
@@ -252,14 +285,22 @@ class NetworkingAgent {
         const commonSkills = studentA.skills.filter(skill => 
           studentB.skills.includes(skill)
         );
-        const commonInstitutes = studentA.institutes.filter(institute => 
-          studentB.institutes.includes(institute)
+        const commonInstitutes = studentA.institutes.filter(instituteA => 
+          studentB.institutes.some(instituteB => instituteB.wallet === instituteA.wallet)
         );
 
         if (commonSkills.length > 0 || commonInstitutes.length > 0) {
           connections.push({
-            source: studentA.wallet,
-            target: studentB.wallet,
+            source: {
+              wallet: studentA.wallet,
+              name: studentA.name,
+              role: studentA.role
+            },
+            target: {
+              wallet: studentB.wallet,
+              name: studentB.name,
+              role: studentB.role
+            },
             commonSkills: commonSkills,
             commonInstitutes: commonInstitutes,
             strength: this.calculateConnectionStrength(commonSkills, commonInstitutes),
@@ -312,12 +353,14 @@ class NetworkingAgent {
           const commonSkills = studentNode.skills.filter(skill => 
             student.skills.includes(skill)
           );
-          const commonInstitutes = studentNode.institutes.filter(institute => 
-            student.institutes.includes(institute)
+          const commonInstitutes = studentNode.institutes.filter(instituteA => 
+            student.institutes.some(instituteB => instituteB.wallet === instituteA.wallet)
           );
           
           return {
             wallet: student.wallet,
+            name: student.name,
+            role: student.role,
             commonSkills: commonSkills,
             commonInstitutes: commonInstitutes,
             connectionStrength: this.calculateConnectionStrength(commonSkills, commonInstitutes),

@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 /**
  * User model for ChainCred.
- * Stores wallet address (unique), role (e.g., 'institute' for issuers), and optional name.
+ * Stores wallet address (unique), role (e.g., 'institute' for issuers), and required name.
  * Used for authentication and role-based access (e.g., restrict upload/mint to 'institute').
- * Validation: Wallet is required and unique; role is required.
+ * Validation: Wallet is required and unique; role is required; name is required.
  */
 const userSchema = new mongoose.Schema({
   wallet: {
@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
   },
   name: {
     type: String,
-    optional: true,
+    required: true, // Changed from optional to required
   },
 }, { timestamps: true });
 

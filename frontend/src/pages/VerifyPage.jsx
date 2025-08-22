@@ -57,13 +57,32 @@ export default function VerifyPage(){
           {result && (
             result.valid ? (
               <div className="bg-gray-900 p-4 rounded">
-                <div>✅ Valid</div>
-                <div>Student: {result.metadata?.studentWallet}</div>
-                <div>Issuer: {result.metadata?.issuerWallet}</div>
-                <div>Issued: {result.metadata?.issuedDateISO}</div>
-                <div>CertificateID: {result.metadata?.certificateID}</div>
-                <a className="text-yellow-400" href={result.metadata?.fileUrl} target="_blank" rel="noreferrer">Open PDF</a>
-                <div>Tx: <a className="text-yellow-400" href={`https://opbnb-testnet.bscscan.com/tx/${result.metadata?.txHash}`} target="_blank" rel="noreferrer">View on opBNB</a></div>
+                <div className="text-green-400 font-semibold text-lg mb-3">✅ Valid Credential</div>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-400">Student:</span> 
+                    <span className="text-yellow-400 font-medium ml-2">{result.metadata?.studentName || 'Unknown'}</span>
+                    <span className="text-gray-500 ml-2">({result.metadata?.studentWallet})</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Issuer:</span> 
+                    <span className="text-yellow-400 font-medium ml-2">{result.metadata?.issuerName || 'Unknown'}</span>
+                    <span className="text-gray-500 ml-2">({result.metadata?.issuerWallet})</span>
+                  </div>
+                  <div><span className="text-gray-400">Issued:</span> <span className="text-white ml-2">{result.metadata?.issuedDateISO}</span></div>
+                  <div><span className="text-gray-400">CertificateID:</span> <span className="text-white font-mono ml-2">{result.metadata?.certificateID}</span></div>
+                  <div className="pt-2">
+                    <a className="text-yellow-400 hover:underline" href={result.metadata?.fileUrl} target="_blank" rel="noreferrer">📄 Open PDF</a>
+                  </div>
+                  {result.metadata?.txHash && (
+                    <div>
+                      <span className="text-gray-400">Transaction:</span> 
+                      <a className="text-yellow-400 hover:underline ml-2" href={`https://opbnb-testnet.bscscan.com/tx/${result.metadata?.txHash}`} target="_blank" rel="noreferrer">
+                        🔗 View on opBNB
+                      </a>
+                    </div>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="bg-red-900 p-4 rounded">❌ Credential not found / invalid — {result.error}</div>

@@ -1,9 +1,25 @@
 const Connection = require('../models/Connection');
 const Certificate = require('../models/Certificate');
+const User = require('../models/User');
 const ethers = require('ethers');
 
 // Helper to normalize wallet
 const norm = (w) => (w || '').toLowerCase();
+
+// Helper to populate user names
+const populateUserNames = async (wallets) => {
+  const users = await User.find({ wallet: { $in: wallets } }).lean();
+  const userMap = new Map(users.map(u => [u.wallet.toLowerCase(), u]));
+  
+  return wallets.map(wallet => {
+    const user = userMap.get(wallet.toLowerCase());
+    return {
+      wallet,
+      name: user?.name || 'Unknown User',
+      role: user?.role || 'unknown'
+    };
+  });
+};
 
 // POST /api/social/connect
 // body: { requesterWallet, recipientWallet }
@@ -85,7 +101,28 @@ const listRequests = async (req, res) => {
     const incoming = await Connection.find({ recipientWallet: w, status: 'pending' }).lean();
     const outgoing = await Connection.find({ requesterWallet: w, status: 'pending' }).lean();
 
-    res.json({ success: true, data: { incoming, outgoing } });
+    // Populate user names for incoming requests
+    const incomingWallets = incoming.map(r => r.requesterWallet);
+    const incomingWithNames = await populateUserNames(incomingWallets);
+    
+    // Populate user names for outgoing requests
+    const outgoingWallets = outgoing.map(r => r.recipientWallet);
+    const outgoingWithNames = await populateUserNames(outgoingWallets);
+
+    // Merge the data
+    const incomingWithData = incoming.map((req, index) => ({
+      ...req,
+      requesterName: incomingWithNames[index]?.name || 'Unknown User',
+      requesterRole: incomingWithNames[index]?.role || 'unknown'
+    }));
+
+    const outgoingWithData = outgoing.map((req, index) => ({
+      ...req,
+      recipientName: outgoingWithNames[index]?.name || 'Unknown User',
+      recipientRole: outgoingWithNames[index]?.role || 'unknown'
+    }));
+
+    res.json({ success: true, data: { incoming: incomingWithData, outgoing: outgoingWithData } });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -110,7 +147,10 @@ const listConnections = async (req, res) => {
       accepted.map((c) => (c.requesterWallet === w ? c.recipientWallet : c.requesterWallet))
     );
 
-    res.json({ success: true, data: { connections: Array.from(peerSet) } });
+    // Populate user names for connections
+    const connectionsWithNames = await populateUserNames(Array.from(peerSet));
+
+    res.json({ success: true, data: { connections: connectionsWithNames } });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -155,7 +195,17 @@ const listSuggestions = async (req, res) => {
       .sort((a, b) => b.commonIssuerCount - a.commonIssuerCount)
       .slice(0, 20);
 
-    res.json({ success: true, data: { suggestions: scored } });
+    // Populate user names for suggestions
+    const suggestionsWithNames = await populateUserNames(scored.map(s => s.wallet));
+    
+    // Merge the data
+    const finalSuggestions = scored.map((suggestion, index) => ({
+      ...suggestion,
+      name: suggestionsWithNames[index]?.name || 'Unknown User',
+      role: suggestionsWithNames[index]?.role || 'unknown'
+    }));
+
+    res.json({ success: true, data: { suggestions: finalSuggestions } });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

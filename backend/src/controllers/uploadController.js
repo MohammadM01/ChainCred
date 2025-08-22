@@ -38,13 +38,26 @@ const uploadCertificate = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only institutes can upload' });
     }
 
+    // Get student user info for name
+    const student = await User.findOne({ wallet: studentWallet.toLowerCase() });
+    if (!student) {
+      return res.status(404).json({ success: false, error: 'Student not found' });
+    }
+
     // Upload PDF buffer to Greenfield
     const pdfUpload = await uploadToGreenfield(req.file.buffer, `${crypto.randomBytes(16).toString('hex')}.pdf`);
     const fileUrl = pdfUpload.url;
     const fileHash = pdfUpload.hash;
 
-    // Generate metadata
-    const metadata = generateMetadata(studentWallet.toLowerCase(), issuerWallet.toLowerCase(), fileUrl, fileHash);
+    // Generate metadata with names
+    const metadata = generateMetadata(
+      studentWallet.toLowerCase(), 
+      issuerWallet.toLowerCase(), 
+      fileUrl, 
+      fileHash,
+      student.name,
+      issuer.name
+    );
 
     // Upload metadata JSON to Greenfield
     const metadataBuffer = Buffer.from(JSON.stringify(metadata));
