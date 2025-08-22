@@ -43,6 +43,13 @@ export default function Header() {
               Resume
             </Link>
           )}
+          <Link 
+            to="/networking" 
+            className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold flex items-center gap-2"
+          >
+            <span role="img" aria-label="AI">🤖</span>
+            Networking
+          </Link>
           {user && (
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-2 text-sm bg-[#f3ba2f] text-black rounded-full px-3 py-1 shadow hover:shadow-yellow-400/50 transition-shadow">

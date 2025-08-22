@@ -4,7 +4,7 @@ import axios from 'axios';
 axios.defaults.withCredentials = true;
 
 const envBase = import.meta.env.VITE_BACKEND_URL || process.env.REACT_APP_BACKEND_URL;
-const BASE_URL = envBase || 'http://localhost:5000';
+const BASE_URL = envBase || 'http://localhost:3000';
 
 const client = axios.create({
   baseURL: BASE_URL,

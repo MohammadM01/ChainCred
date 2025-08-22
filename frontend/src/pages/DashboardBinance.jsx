@@ -257,6 +257,7 @@ function StudentPanel({ user }) {
   const [showPDFViewer, setShowPDFViewer] = useState(false);
   const [currentPDFUrl, setCurrentPDFUrl] = useState('');
   const [qrFor, setQrFor] = useState(null); // data URL
+  const [deletingId, setDeletingId] = useState(null); // Track which certificate is being deleted
 
   useEffect(() => {
     (async () => {
@@ -290,6 +291,32 @@ function StudentPanel({ user }) {
     const verifyUrl = `${window.location.origin}/verify?certificateID=${cert.certificateID}`;
     const encoded = await QRCode.toDataURL(verifyUrl, { width: 320, margin: 1 });
     setQrFor({ img: encoded, verifyUrl, tx: cert.txHash });
+  };
+
+  const handleDelete = async (certId) => {
+    if (!window.confirm('Are you sure you want to delete this certificate? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeletingId(certId);
+      const response = await axios.delete(`/api/certificates/${certId}`, {
+        data: { wallet: user.wallet }
+      });
+
+      if (response.data.success) {
+        // Remove the deleted certificate from the local state
+        setItems(prevItems => prevItems.filter(item => item._id !== certId));
+        alert('Certificate deleted successfully!');
+      } else {
+        alert(response.data.error || 'Failed to delete certificate');
+      }
+    } catch (error) {
+      console.error('Error deleting certificate:', error);
+      alert(error.response?.data?.error || 'Failed to delete certificate');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const filteredItems = items.filter(item => {
@@ -421,6 +448,20 @@ function StudentPanel({ user }) {
                 >
                   🔳 QR
                 </button>
+                {/* Only show delete button for pending certificates (not minted ones) */}
+                {it?.status === 'pending' && (
+                  <button
+                    onClick={() => handleDelete(it._id)}
+                    disabled={deletingId === it._id}
+                    className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                      deletingId === it._id
+                        ? 'bg-gray-500 cursor-not-allowed'
+                        : 'bg-red-600 hover:bg-red-700 text-white'
+                    }`}
+                  >
+                    {deletingId === it._id ? '⏳ Deleting...' : '🗑️ Delete'}
+                  </button>
+                )}
               </div>
             </div>
           ))

@@ -4,7 +4,8 @@ const {
   getStudentCertificates,
   getInstituteCertificates,
   getCertificateById,
-  verifyCertificate
+  verifyCertificate,
+  deleteCertificate
 } = require('../controllers/certificateController');
 
 // Get all certificates for a student
@@ -18,5 +19,8 @@ router.get('/:id', getCertificateById);
 
 // Verify a certificate by tokenId
 router.get('/verify/:tokenId', verifyCertificate);
+
+// Delete a certificate by ID
+router.delete('/:id', deleteCertificate);
 
 module.exports = router;
