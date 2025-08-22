@@ -1,112 +1,60 @@
 const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
+const greenfieldSDK = require('@bnb-chain/greenfield-js-sdk');
+const { ethers } = require('ethers');
 
-/**
- * Greenfield upload utility with local fallback mode
- * - Local fallback: GREENFIELD_USE_LOCAL=true saves under backend/uploads and serves via /files
- * - Real SDK: uses @bnb-chain/greenfield-js-sdk to create bucket/object and upload with PUBLIC_READ
- */
 const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = false) => {
   try {
-    // Debug environment variables
-    console.log('Environment check:', {
-      GREENFIELD_USE_LOCAL: process.env.GREENFIELD_USE_LOCAL,
-      GREENFIELD_BUCKET_NAME: process.env.GREENFIELD_BUCKET_NAME ? 'SET' : 'NOT SET',
-      GREENFIELD_API_KEY: process.env.GREENFIELD_API_KEY ? 'SET' : 'NOT SET',
-      PORT: process.env.PORT,
-      PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL
-    });
+    const body = Buffer.isBuffer(filePathOrBuffer)
+      ? filePathOrBuffer
+      : fs.readFileSync(filePathOrBuffer);
 
-    const body = Buffer.isBuffer(filePathOrBuffer) ? filePathOrBuffer : fs.readFileSync(filePathOrBuffer);
-    const timestamp = Date.now();
-    const uniqueName = `${timestamp}-${objectName}`;
+    const uniqueName = `${Date.now()}-${objectName}`;
 
-    // Check if we should use local fallback (default to true if not set)
-    const useLocal = process.env.GREENFIELD_USE_LOCAL !== 'false';
-    
-    console.log('Greenfield upload config:', {
-      useLocal,
-      bucketName: process.env.GREENFIELD_BUCKET_NAME,
-      hasPrivateKey: !!process.env.GREENFIELD_API_KEY,
-      objectName: uniqueName
-    });
-
-    if (useLocal) {
-      console.log('Using local storage fallback');
-      const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-        console.log('Created uploads directory:', uploadsDir);
-      }
-
-      const filePath = path.join(uploadsDir, uniqueName);
-      fs.writeFileSync(filePath, body);
-      console.log('File saved locally:', filePath);
-
-      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
-      const publicUrl = `${base}/files/${encodeURIComponent(uniqueName)}`;
-
-      const hash = crypto.createHash('sha256').update(body).digest('hex');
-      console.log('Local upload successful:', { url: publicUrl, hash });
-      
-      return { url: publicUrl, hash };
-    }
-
-    // Only try to use real Greenfield SDK if not using local fallback
-    console.log('Attempting real Greenfield SDK upload...');
-    
-    // Check if required environment variables are set
     const bucketName = process.env.GREENFIELD_BUCKET_NAME;
     const privateKey = process.env.GREENFIELD_API_KEY;
-    
+    const grpcUrl = process.env.GNFD_GRPC_URL;
+    const chainId = process.env.GNFD_CHAIN_ID;
+    const domain = process.env.PUBLIC_BASE_URL;
+
     if (!bucketName || !privateKey) {
-      throw new Error('GREENFIELD_BUCKET_NAME and GREENFIELD_API_KEY are required for real Greenfield upload');
+      throw new Error('GREENFIELD_BUCKET_NAME and GREENFIELD_API_KEY are required');
     }
 
-    // Real Greenfield SDK path (ESM). Node needs --experimental-specifier-resolution=node for subpath resolution
-    const { Client, VisibilityType, RedundancyType } = await import('@bnb-chain/greenfield-js-sdk');
-    const LongMod = await import('long');
-    const Long = LongMod.default || LongMod;
-    const { ReedSolomon } = await import('@bnb-chain/reed-solomon');
-    const { ethers } = require('ethers');
-
-    const grpcUrl = process.env.GNFD_GRPC_URL || 'https://gnfd-testnet-sp1.bnbchain.org';
-    const chainId = process.env.GNFD_CHAIN_ID ? Number(process.env.GNFD_CHAIN_ID) : 5600;
-
+    const Client = greenfieldSDK.Client;
+    const VisibilityType = greenfieldSDK.StorageEnums.VisibilityType;
     const client = Client.create(grpcUrl, chainId);
 
-    // Pick an SP (prefer sp1)
-    const spList = await client.sp.getStorageProviders();
-    const sps = spList?.body?.sps || [];
-    if (!sps.length) throw new Error('No storage providers available');
-    const sp = sps.find((s) => (s.endpoint || '').includes('gnfd-testnet-sp1')) || sps[0];
-
-    // EVM signer
+    // EVM wallet for signing
     const wallet = new ethers.Wallet(privateKey.startsWith('0x') ? privateKey : `0x${privateKey}`);
     const address = wallet.address;
 
-    // Off-chain auth keypair upload
-    const offchain = await client.offchainauth.genOffChainAuthKeyPairAndUpload({
-      sps: { address: sp.operatorAddress, endpoint: sp.endpoint },
+    // Generate off-chain auth key (required for upload)
+    const offchainKey = await client.offchainauth.genOffChainAuthKeyPairAndUpload({
+      sps: { address, endpoint: grpcUrl }, // simple SP info
       chainId,
       expirationMs: 5 * 24 * 60 * 60 * 1000,
-      domain: process.env.PUBLIC_BASE_URL || 'http://localhost',
+      domain,
       address,
     }, wallet);
 
-    // Ensure bucket exists (PUBLIC_READ)
+    // Check if bucket exists (now that headBucket method works)
     try {
+      console.log('Checking if bucket exists...');
       await client.bucket.headBucket({ bucketName });
-    } catch (_) {
+      console.log('Bucket exists, proceeding with upload...');
+    } catch (bucketError) {
+      console.log('Bucket does not exist, creating it first...');
+      
+      // Create bucket if it doesn't exist
       const createBucketTx = await client.bucket.createBucket({
         bucketName,
         creator: address,
         visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
-        chargedReadQuota: Long.fromString('0'),
-        primarySpAddress: sp.operatorAddress,
+        primarySpAddress: '0x89A1F4e9E821225c2FDC98d192eaf4D1261E0c420b', // Use the correct testnet SP address from DCellar
         paymentAddress: address,
       });
+      
       const sim = await createBucketTx.simulate({ denom: 'BNB' });
       await createBucketTx.broadcast({
         denom: 'BNB',
@@ -115,34 +63,37 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
         payer: address,
         granter: '',
       });
+      
+      console.log('Bucket created successfully');
     }
 
-    // Prepare checksums
-    const rs = new ReedSolomon();
-    const expectChecksumsBase64 = rs.encode(new Uint8Array(body));
-    const expectChecksums = expectChecksumsBase64.map((b64) => Uint8Array.from(Buffer.from(b64, 'base64')));
-
-    const contentType = isMetadata ? 'application/json' : 'application/pdf';
-
+    // Now that we have the working SDK, use the correct methods
+    console.log('Creating object with working SDK methods...');
     const createObjectTx = await client.object.createObject({
       bucketName,
       objectName: uniqueName,
       creator: address,
       visibility: VisibilityType.VISIBILITY_TYPE_PUBLIC_READ,
-      contentType,
-      redundancyType: RedundancyType.REDUNDANCY_EC_TYPE,
-      payloadSize: Long.fromInt(body.length),
-      expectChecksums,
+      contentType: isMetadata ? 'application/json' : 'application/pdf',
+      payloadSize: body.length,
     });
-    const sim2 = await createObjectTx.simulate({ denom: 'BNB' });
+
+    console.log('Object creation transaction created, simulating...');
+    const sim = await createObjectTx.simulate({ denom: 'BNB' });
+    
+    console.log('Broadcasting object creation transaction...');
     const createRes = await createObjectTx.broadcast({
       denom: 'BNB',
-      gasLimit: Number(sim2?.gasLimit || 2_000_000),
-      gasPrice: sim2?.gasPrice || '5000000000',
+      gasLimit: Number(sim?.gasLimit || 2_000_000),
+      gasPrice: sim?.gasPrice || '5000000000',
       payer: address,
       granter: '',
     });
 
+    console.log('Object creation transaction broadcasted:', createRes.transactionHash);
+
+    // Upload object using the off-chain key and transaction hash
+    console.log('Uploading object...');
     await client.object.uploadObject({
       bucketName,
       objectName: uniqueName,
@@ -150,49 +101,25 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
       txnHash: createRes.transactionHash,
     }, {
       type: 'EDDSA',
-      domain: process.env.PUBLIC_BASE_URL || 'http://localhost',
-      seed: offchain.seedString,
+      domain,
+      seed: offchainKey.seedString,
       address,
     });
-
-    const baseEndpoint = (sp.endpoint || grpcUrl).replace(/\/$/, '');
-    const url = `${baseEndpoint}/view/${bucketName}/${encodeURIComponent(uniqueName)}`;
-    const hash = crypto.createHash('sha256').update(body).digest('hex');
     
-    console.log('Real Greenfield upload successful:', { url, hash });
+    console.log('Object uploaded successfully');
+
+    // Use the storage provider endpoint for the public URL, not the gRPC URL
+    const spEndpoint = 'https://gnfd-testnet-sp1.bnbchain.org';
+    const url = `${spEndpoint}/view/${bucketName}/${encodeURIComponent(uniqueName)}`;
+    const hash = crypto.createHash('sha256').update(body).digest('hex');
+
+    console.log('Greenfield upload successful:', url);
     return { url, hash };
+
   } catch (error) {
     console.error('Greenfield upload error:', error);
-    
-    // Always try to use local storage as a fallback
-    console.log('Falling back to local storage due to Greenfield SDK error...');
-    
-    try {
-      const body = Buffer.isBuffer(filePathOrBuffer) ? filePathOrBuffer : fs.readFileSync(filePathOrBuffer);
-      const timestamp = Date.now();
-      const uniqueName = `${timestamp}-${objectName}`;
-      
-      const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
-      if (!fs.existsSync(uploadsDir)) {
-        fs.mkdirSync(uploadsDir, { recursive: true });
-      }
-
-      const filePath = path.join(uploadsDir, uniqueName);
-      fs.writeFileSync(filePath, body);
-
-      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
-      const publicUrl = `${base}/files/${encodeURIComponent(uniqueName)}`;
-
-      const hash = crypto.createHash('sha256').update(body).digest('hex');
-      console.log('Fallback local upload successful:', { url: publicUrl, hash });
-      
-      return { url: publicUrl, hash };
-    } catch (fallbackError) {
-      console.error('Fallback local upload also failed:', fallbackError);
-      throw new Error(`Both Greenfield and local upload failed. Greenfield error: ${error.message}, Local error: ${fallbackError.message}`);
-    }
+    throw new Error(`Greenfield upload failed: ${error.message}`);
   }
 };
 
 module.exports = { uploadToGreenfield };
-

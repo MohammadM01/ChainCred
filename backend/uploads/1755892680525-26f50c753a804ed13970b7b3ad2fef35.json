@@ -1,0 +1,26 @@
+{
+  "originalName": "ea1a99007d6a3b0f5b5fa047ade17886fee98f1d1d5c335c56cc2ce09fc1fa80.json",
+  "uniqueName": "1755892680525-26f50c753a804ed13970b7b3ad2fef35.json",
+  "size": 404,
+  "contentType": "application/json",
+  "hash": "4bc5d42f8ca26626451ee412597c644f6781d3fb9a9dc54d3e579bc5a1457d73",
+  "storage": {
+    "local": {
+      "url": "http://localhost:3000/files/1755892680525-26f50c753a804ed13970b7b3ad2fef35.json",
+      "path": "C:\\Users\\YASH\\OneDrive\\Documents\\GitHub\\ChainCred\\backend\\uploads\\1755892680525-26f50c753a804ed13970b7b3ad2fef35.json",
+      "available": true
+    },
+    "greenfield": {
+      "url": null,
+      "available": false,
+      "error": "Not implemented yet"
+    }
+  },
+  "createdAt": "2025-08-22T19:58:00.526Z",
+  "uploadedAt": 1755892680525,
+  "metadata": {
+    "certificateID": "ea1a99007d6a3b0f5b5fa047ade17886fee98f1d1d5c335c56cc2ce09fc1fa80",
+    "type": "certificate_metadata",
+    "relatedPdfUrl": "http://localhost:3000/files/1755892680519-a7fb1902a90bc68a9aa481e9fdb4a94d.pdf"
+  }
+}

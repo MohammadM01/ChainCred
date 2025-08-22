@@ -1,0 +1,25 @@
+{
+  "originalName": "test-metadata.json",
+  "uniqueName": "1755892545189-7f6162b850d749049b13319c592d8cea.json",
+  "size": 171,
+  "contentType": "application/json",
+  "hash": "d62382fdcd07c6c2e798c7ffa557fa045bf6f162bce3febd8441c6f1b6358e18",
+  "storage": {
+    "local": {
+      "url": "http://localhost:3000/files/1755892545189-7f6162b850d749049b13319c592d8cea.json",
+      "path": "C:\\Users\\YASH\\OneDrive\\Documents\\GitHub\\ChainCred\\backend\\uploads\\1755892545189-7f6162b850d749049b13319c592d8cea.json",
+      "available": true
+    },
+    "greenfield": {
+      "url": null,
+      "available": false,
+      "error": "Not implemented yet"
+    }
+  },
+  "createdAt": "2025-08-22T19:55:45.191Z",
+  "uploadedAt": 1755892545189,
+  "metadata": {
+    "certificateID": "test-cert-456",
+    "type": "certificate_metadata"
+  }
+}

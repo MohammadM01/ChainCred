@@ -1,7 +1,7 @@
 const multer = require('multer');
 const User = require('../models/User');
 const Certificate = require('../models/Certificate');
-const { uploadToGreenfield } = require('../utils/greenfieldUpload');
+const { smartUpload } = require('../utils/smartUpload');
 const { generateMetadata } = require('../utils/generateMetadata');
 const { ethers } = require('ethers');
 const crypto = require('crypto');
@@ -44,8 +44,14 @@ const uploadCertificate = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Student not found' });
     }
 
-    // Upload PDF buffer to Greenfield
-    const pdfUpload = await uploadToGreenfield(req.file.buffer, `${crypto.randomBytes(16).toString('hex')}.pdf`);
+    // Upload PDF using smart upload system
+    const pdfFileName = `${crypto.randomBytes(16).toString('hex')}.pdf`;
+    const pdfUpload = await smartUpload(req.file.buffer, pdfFileName, {
+      studentWallet: studentWallet.toLowerCase(),
+      issuerWallet: issuerWallet.toLowerCase(),
+      studentName: student.name,
+      issuerName: issuer.name
+    });
     const fileUrl = pdfUpload.url;
     const fileHash = pdfUpload.hash;
 
@@ -59,9 +65,13 @@ const uploadCertificate = async (req, res) => {
       issuer.name
     );
 
-    // Upload metadata JSON to Greenfield
+    // Upload metadata JSON using smart upload system
     const metadataBuffer = Buffer.from(JSON.stringify(metadata));
-    const metadataUpload = await uploadToGreenfield(metadataBuffer, `${metadata.certificateID}.json`, true);
+    const metadataUpload = await smartUpload(metadataBuffer, `${metadata.certificateID}.json`, {
+      certificateID: metadata.certificateID,
+      type: 'certificate_metadata',
+      relatedPdfUrl: fileUrl
+    });
     const metadataUrl = metadataUpload.url;
 
     // Save to DB

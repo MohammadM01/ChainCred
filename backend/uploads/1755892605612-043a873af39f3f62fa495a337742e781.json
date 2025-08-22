@@ -1,0 +1,27 @@
+{
+  "originalName": "de09d8623dd5006468ff3ce833ba4bd0.pdf",
+  "uniqueName": "1755892605612-043a873af39f3f62fa495a337742e781.pdf",
+  "size": 72,
+  "contentType": "application/pdf",
+  "hash": "5eefa98dd1774ce5e9d185437e34cae5ba846f5bd81f020024a66ef834334b21",
+  "storage": {
+    "local": {
+      "url": "http://localhost:3000/files/1755892605612-043a873af39f3f62fa495a337742e781.pdf",
+      "path": "C:\\Users\\YASH\\OneDrive\\Documents\\GitHub\\ChainCred\\backend\\uploads\\1755892605612-043a873af39f3f62fa495a337742e781.pdf",
+      "available": true
+    },
+    "greenfield": {
+      "url": null,
+      "available": false,
+      "error": "Not implemented yet"
+    }
+  },
+  "createdAt": "2025-08-22T19:56:45.614Z",
+  "uploadedAt": 1755892605612,
+  "metadata": {
+    "studentWallet": "0x1234567890abcdef1234567890abcdef12345678",
+    "issuerWallet": "0xabcdef1234567890abcdef1234567890abcdef12",
+    "studentName": "John Doe",
+    "issuerName": "Test University"
+  }
+}

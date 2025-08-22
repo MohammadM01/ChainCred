@@ -1,0 +1,27 @@
+{
+  "originalName": "cfb4bc97c36288aedd841ae2c26b9836.pdf",
+  "uniqueName": "1755892680519-a7fb1902a90bc68a9aa481e9fdb4a94d.pdf",
+  "size": 522767,
+  "contentType": "application/pdf",
+  "hash": "23cc13efe7bc9a729c104560918c552f46f9ec8045ef5b96233209dfa96d3184",
+  "storage": {
+    "local": {
+      "url": "http://localhost:3000/files/1755892680519-a7fb1902a90bc68a9aa481e9fdb4a94d.pdf",
+      "path": "C:\\Users\\YASH\\OneDrive\\Documents\\GitHub\\ChainCred\\backend\\uploads\\1755892680519-a7fb1902a90bc68a9aa481e9fdb4a94d.pdf",
+      "available": true
+    },
+    "greenfield": {
+      "url": null,
+      "available": false,
+      "error": "Not implemented yet"
+    }
+  },
+  "createdAt": "2025-08-22T19:58:00.523Z",
+  "uploadedAt": 1755892680519,
+  "metadata": {
+    "studentWallet": "0x4f81e4dc8103773a0de102a1a26261a4e23e8149",
+    "issuerWallet": "0x6abda493f1e63e100b4f1281aa84325bd5198f66",
+    "studentName": "",
+    "issuerName": ""
+  }
+}
