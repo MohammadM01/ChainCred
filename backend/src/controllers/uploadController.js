@@ -3,7 +3,7 @@ const User = require('../models/User');
 const Certificate = require('../models/Certificate');
 const { uploadToGreenfield } = require('../utils/greenfieldUpload');
 const { generateMetadata } = require('../utils/generateMetadata');
-const ethers = require('ethers');
+const { ethers } = require('ethers');
 const crypto = require('crypto');
 
 /**

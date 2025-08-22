@@ -3,7 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 
 /**
- * Greenfield upload utility with two modes:
+ * Greenfield upload utility with local fallback mode
  * - Local fallback: GREENFIELD_USE_LOCAL=true saves under backend/uploads and serves via /files
  * - Real SDK: uses @bnb-chain/greenfield-js-sdk to create bucket/object and upload with PUBLIC_READ
  */
@@ -25,9 +25,15 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
     // Check if we should use local fallback (default to true if not set)
     const useLocal = process.env.GREENFIELD_USE_LOCAL !== 'false';
     
+    console.log('Greenfield upload config:', {
+      useLocal,
+      bucketName: process.env.GREENFIELD_BUCKET_NAME,
+      hasPrivateKey: !!process.env.GREENFIELD_API_KEY,
+      objectName: uniqueName
+    });
+
     if (useLocal) {
-      console.log('Using local fallback for file upload');
-      
+      console.log('Using local storage fallback');
       const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
       if (!fs.existsSync(uploadsDir)) {
         fs.mkdirSync(uploadsDir, { recursive: true });
@@ -38,7 +44,7 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
       fs.writeFileSync(filePath, body);
       console.log('File saved locally:', filePath);
 
-      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
       const publicUrl = `${base}/files/${encodeURIComponent(uniqueName)}`;
 
       const hash = crypto.createHash('sha256').update(body).digest('hex');
@@ -174,7 +180,7 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
       const filePath = path.join(uploadsDir, uniqueName);
       fs.writeFileSync(filePath, body);
 
-      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 5000}`;
+      const base = process.env.PUBLIC_BASE_URL || `http://localhost:${process.env.PORT || 3000}`;
       const publicUrl = `${base}/files/${encodeURIComponent(uniqueName)}`;
 
       const hash = crypto.createHash('sha256').update(body).digest('hex');
@@ -189,3 +195,4 @@ const uploadToGreenfield = async (filePathOrBuffer, objectName, isMetadata = fal
 };
 
 module.exports = { uploadToGreenfield };
+

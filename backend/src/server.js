@@ -5,7 +5,7 @@
     /**
      * Server entry point.
      * Loads .env, connects to DB, starts Express server.
-     * For ChainCred MVP: Listens on PORT from .env or 5000.
+     * For ChainCred MVP: Listens on PORT from .env or 3000.
      * BNB notes: Ensure OPBNB_TESTNET_RPC and GREENFIELD_API_KEY are set.
      */
 

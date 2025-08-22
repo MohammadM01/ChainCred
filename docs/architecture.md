@@ -5,7 +5,7 @@ ChainCred is a decentralized verifiable credential platform built on the BNB eco
 
 ### Key Components
 - **Frontend**: React + Tailwind (separate); integrates via REST APIs with CORS for localhost:3000.
-- **Backend**: Express server on port 5000; utils for Greenfield/opBNB interactions.
+- **Backend**: Express server on port 3000; utils for Greenfield/opBNB interactions.
 - **Database**: MongoDB Atlas (Users: wallet/role; Certificates: details/hash/tokenId).
 - **Smart Contract**: SoulboundCredential.sol (non-transferable ERC-721) on opBNB testnet.
 - **Storage**: BNB Greenfield for PDFs/metadata (public read).

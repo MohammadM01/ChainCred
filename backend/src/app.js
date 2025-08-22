@@ -9,6 +9,7 @@ const resumeRoutes = require('./routes/resume');
 const certificateRoutes = require('./routes/certificates');
 const networkingRoutes = require('./routes/networking');
 const socialRoutes = require('./routes/social');
+
 const app = express();
 
 /**
@@ -48,6 +49,7 @@ app.use('/api/resume', resumeRoutes);
 app.use('/api/certificates', certificateRoutes);
 app.use('/api/networking', networkingRoutes);
 app.use('/api/social', socialRoutes);
+
 
 // Demo metadata route (serves seeded demo metadata) - removable for production
 app.get('/demo/metadata/:id', (req, res) => {

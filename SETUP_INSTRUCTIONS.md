@@ -103,7 +103,7 @@ node fix-minted-certificate.js
 **Solution:** This is expected with mock URLs. In production, implement proper Greenfield SDK with public read permissions.
 
 ### **Issue: Frontend Can't Connect to Backend**
-**Solution:** Check that backend is running on port 5000 and frontend is configured to connect to `http://localhost:5000`
+**Solution:** Check that backend is running on port 3000 and frontend is configured to connect to `http://localhost:3000`
 
 ## 🎉 What You Now Have
 
