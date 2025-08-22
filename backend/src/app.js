@@ -7,6 +7,8 @@ const mintRoutes = require('./routes/mint');
 const verifyRoutes = require('./routes/verify');
 const resumeRoutes = require('./routes/resume');
 const certificateRoutes = require('./routes/certificates');
+const networkingRoutes = require('./routes/networking');
+const socialRoutes = require('./routes/social');
 const app = express();
 
 /**
@@ -33,6 +35,9 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Static file serving for local uploads fallback
+app.use('/files', express.static(require('path').join(__dirname, '..', 'uploads')));
+
 // Routes (using defined variables to avoid redundant requires)
 app.use('/', indexRoutes);  // Mount at root for health check
 app.use('/api/auth', authRoutes);
@@ -41,6 +46,8 @@ app.use('/api/mint', mintRoutes);
 app.use('/api/verify', verifyRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/certificates', certificateRoutes);
+app.use('/api/networking', networkingRoutes);
+app.use('/api/social', socialRoutes);
 
 // Demo metadata route (serves seeded demo metadata) - removable for production
 app.get('/demo/metadata/:id', (req, res) => {
