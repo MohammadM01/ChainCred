@@ -61,7 +61,9 @@ export default function AuthBinance() {
           <div className="flex-1 w-full">
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-8 shadow-lg hover:shadow-yellow-400/50 transition-shadow duration-300">
               <h1 className="text-3xl font-bold tracking-tight mb-4">
-                <span className="text-[#f3ba2f]">Binance</span>-style Signup
+                <p className='text-[#f3ba2f]'>
+                Signup
+                </p>
               </h1>
               <p className="text-gray-400">Securely register your wallet and choose your role.</p>
 

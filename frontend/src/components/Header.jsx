@@ -1,8 +1,26 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 
 export default function Header() {
   const { user, logout } = useUser();
+  const location = useLocation();
+
+  // Helper function to determine if a link is active
+  const isActive = (path) => {
+    if (path === '/') {
+      return location.pathname === '/';
+    }
+    return location.pathname.startsWith(path);
+  };
+
+  // Helper function to get navigation link classes
+  const getNavLinkClasses = (path) => {
+    const baseClasses = "transition-colors font-semibold";
+    if (isActive(path)) {
+      return `${baseClasses} text-[#f3ba2f]`;
+    }
+    return `${baseClasses} text-gray-300 hover:text-[#f3ba2f]`;
+  };
 
   return (
     <header className="p-4 border-b border-gray-800 bg-black shadow-md">
@@ -13,44 +31,43 @@ export default function Header() {
         <nav className="flex items-center gap-6">
           <Link 
             to="/" 
-            className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold"
+            className={getNavLinkClasses('/')}
           >
             Home
           </Link>
           <Link 
             to="/verify" 
-            className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold"
+            className={getNavLinkClasses('/verify')}
           >
             Verify
           </Link>
           <Link 
             to="/dashboard-binance" 
-            className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold"
+            className={getNavLinkClasses('/dashboard-binance')}
           >
             Dashboard
           </Link>
           <Link 
             to="/profile" 
-            className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold"
+            className={getNavLinkClasses('/profile')}
           >
             Profile
           </Link>
           {user && user.role === 'student' && ( // NEW: Conditional for student only
             <Link 
               to="/resume-builder" 
-              className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold"
+              className={getNavLinkClasses('/resume-builder')}
             >
               Resume
             </Link>
           )}
           <Link 
             to="/networking" 
-            className="text-gray-300 hover:text-[#f3ba2f] transition-colors font-semibold flex items-center gap-2"
+            className={`${getNavLinkClasses('/networking')} flex items-center gap-2`}
           >
-            <span role="img" aria-label="AI">🤖</span>
             Networking
           </Link>
-          {user && (
+          {user ? (
             <div className="flex items-center gap-4">
               <span className="flex items-center gap-2 text-sm bg-[#f3ba2f] text-black rounded-full px-3 py-1 shadow hover:shadow-yellow-400/50 transition-shadow">
                 <span role="img" aria-label="User">👤</span>
@@ -67,6 +84,13 @@ export default function Header() {
                 Logout
               </button>
             </div>
+          ) : (
+            <Link
+              to="/auth-binance"
+              className="px-4 py-2 rounded-lg font-semibold bg-[#f3ba2f] text-black hover:bg-yellow-400 transition-all transform hover:scale-105 shadow-lg hover:shadow-yellow-400/50"
+            >
+              Sign In
+            </Link>
           )}
         </nav>
       </div>
