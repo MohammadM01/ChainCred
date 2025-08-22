@@ -115,9 +115,55 @@ const verifyCertificate = async (req, res) => {
   }
 };
 
+// DELETE /api/certificates/:id
+const deleteCertificate = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { wallet } = req.body; // Student wallet for verification
+    
+    if (!id || !wallet) {
+      return res.status(400).json({ success: false, error: 'Certificate ID and student wallet are required' });
+    }
+
+    // Find the certificate
+    const certificate = await Certificate.findById(id);
+    
+    if (!certificate) {
+      return res.status(404).json({ success: false, error: 'Certificate not found' });
+    }
+
+    // Verify that the student owns this certificate
+    if (certificate.studentWallet.toLowerCase() !== wallet.toLowerCase()) {
+      return res.status(403).json({ success: false, error: 'You can only delete your own certificates' });
+    }
+
+    // Check if certificate is already minted on blockchain
+    if (certificate.tokenId && certificate.txHash) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Cannot delete certificates that are already minted on blockchain' 
+      });
+    }
+
+    // Delete the certificate
+    await Certificate.findByIdAndDelete(id);
+    
+    console.log(`Certificate ${id} deleted by student ${wallet}`);
+
+    res.json({
+      success: true,
+      message: 'Certificate deleted successfully'
+    });
+  } catch (error) {
+    console.error('Error deleting certificate:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
   getStudentCertificates,
   getInstituteCertificates,
   getCertificateById,
-  verifyCertificate
+  verifyCertificate,
+  deleteCertificate
 };

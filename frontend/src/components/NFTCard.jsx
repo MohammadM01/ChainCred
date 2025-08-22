@@ -4,6 +4,7 @@ import api from '../utils/api';
 export default function NFTCard({ certificate, onRefresh, isInstitute = false }) {
   const [minting, setMinting] = useState(false);
   const [mintError, setMintError] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const handleMint = async () => {
     try {
@@ -27,6 +28,31 @@ export default function NFTCard({ certificate, onRefresh, isInstitute = false })
       setMintError(error.response?.data?.error || 'Minting failed');
     } finally {
       setMinting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this certificate? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      setDeleting(true);
+      const response = await api.delete(`/certificates/${certificate._id}`, {
+        data: { wallet: certificate.studentWallet }
+      });
+
+      if (response.data.success) {
+        onRefresh(); // Refresh the certificates list
+        alert('Certificate deleted successfully!');
+      } else {
+        alert(response.data.error || 'Failed to delete certificate');
+      }
+    } catch (error) {
+      console.error('Error deleting certificate:', error);
+      alert(error.response?.data?.error || 'Failed to delete certificate');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -141,6 +167,21 @@ export default function NFTCard({ certificate, onRefresh, isInstitute = false })
           >
             📄 View Certificate
           </a>
+        )}
+
+        {/* Delete button - only show for pending certificates (not minted ones) */}
+        {certificate.status === 'pending' && (
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
+              deleting
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-red-600 hover:bg-red-700 text-white'
+            }`}
+          >
+            {deleting ? '⏳ Deleting...' : '🗑️ Delete Certificate'}
+          </button>
         )}
       </div>
 
