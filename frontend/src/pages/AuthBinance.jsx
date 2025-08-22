@@ -135,13 +135,41 @@ export default function AuthBinance() {
           {/* Right: Highlights */}
           <div className="w-full md:max-w-sm">
             <div className="bg-gray-900 rounded-xl border border-gray-800 p-6 shadow-lg hover:shadow-yellow-400/50 transition-shadow duration-300">
-              <h3 className="text-lg font-semibold text-[#f3ba2f] mb-4">Why ChainCred</h3>
-              <ul className="space-y-3 text-gray-300">
-                <li className="flex items-center gap-2">🛡️ <span>Tamper-proof credentials (opBNB)</span></li>
-                <li className="flex items-center gap-2">🗄️ <span>Decentralized storage (Greenfield)</span></li>
-                <li className="flex items-center gap-2">⚡ <span>Instant verification, low fees</span></li>
-                <li className="flex items-center gap-2">🔒 <span>Soulbound, non-transferable</span></li>
-              </ul>
+              <h3 className="text-lg font-semibold text-[#f3ba2f] mb-4">How to Create Your Wallet</h3>
+              <div className="space-y-4 text-gray-300">
+                <div className="flex items-start gap-3">
+                  <span className="text-[#f3ba2f] font-bold text-sm">1.</span>
+                  <div className="text-sm">
+                    <div className="font-medium">Click "Connect Wallet"</div>
+                    <div className="text-gray-400 mt-1">No existing wallet needed - we'll create one for you!</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#f3ba2f] font-bold text-sm">2.</span>
+                  <div className="text-sm">
+                    <div className="font-medium">Choose Social Login</div>
+                    <div className="text-gray-400 mt-1">Sign in with Google, Twitter, Discord, or email</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#f3ba2f] font-bold text-sm">3.</span>
+                  <div className="text-sm">
+                    <div className="font-medium">Wallet Auto-Created</div>
+                    <div className="text-gray-400 mt-1">Web3Auth creates a secure BNB wallet automatically</div>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <span className="text-[#f3ba2f] font-bold text-sm">4.</span>
+                  <div className="text-sm">
+                    <div className="font-medium">Start Using ChainCred</div>
+                    <div className="text-gray-400 mt-1">Upload certificates or verify credentials instantly</div>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-6 p-3 bg-gray-800 rounded-lg border border-gray-700">
+                <div className="text-xs text-yellow-400 font-medium mb-1">💡 No Crypto Experience Required</div>
+                <div className="text-xs text-gray-400">Your wallet is created and managed securely through your social account. No private keys to remember!</div>
+              </div>
               <div className="mt-6 text-sm text-gray-400">
                 Need help? Visit <a href="/verify" className="text-[#f3ba2f] hover:underline">Verify</a> to test a certificate ID.
               </div>
