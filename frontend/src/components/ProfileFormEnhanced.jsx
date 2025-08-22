@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import api from '../utils/api';
 import { useUser } from '../context/UserContext';
 
-const ProfileForm = ({ wallet, onSave }) => {
+const ProfileFormEnhanced = ({ wallet, onSave }) => {
   const { showToast } = useUser();
   const [formData, setFormData] = useState({
     name: '',
@@ -16,7 +16,6 @@ const ProfileForm = ({ wallet, onSave }) => {
     workExperience: [{ role: '', company: '', duration: '', description: '' }],
     skills: [''],
     languages: [''],
-    certifications: [''],
     projects: [{ name: '', description: '', technologies: '', link: '' }]
   });
   const [loading, setLoading] = useState(false);
@@ -70,14 +69,12 @@ const ProfileForm = ({ wallet, onSave }) => {
     setLoading(true);
     
     try {
-      // Filter out empty entries
       const cleanData = {
         ...formData,
         education: formData.education.filter(edu => edu.degree && edu.institution),
         workExperience: formData.workExperience.filter(work => work.role && work.company),
         skills: formData.skills.filter(skill => skill.trim()),
         languages: formData.languages.filter(lang => lang.trim()),
-        certifications: formData.certifications.filter(cert => cert.trim()),
         projects: formData.projects.filter(proj => proj.name)
       };
 
@@ -567,4 +564,4 @@ const ProfileForm = ({ wallet, onSave }) => {
   );
 };
 
-export default ProfileForm;
+export default ProfileFormEnhanced;

@@ -5,11 +5,13 @@ const { uploadToGreenfield } = require('../utils/greenfieldUpload');
 const { generateMetadata } = require('../utils/generateMetadata');
 const ethers = require('ethers');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Upload controller for ChainCred (institute only).
  * Handles PDF upload via multipart/form-data.
- * Flow: Check role, upload PDF to Greenfield, generate metadata, upload metadata JSON, save to DB.
+ * Flow: Check role, save PDF locally, generate metadata, save metadata JSON locally, save to DB.
  * Returns { metadataUrl, fileHash, certificateID }.
  * Multer config: In-memory storage for buffer handling.
  * Security: Role check from DB; validate addresses.
@@ -38,18 +40,35 @@ const uploadCertificate = async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only institutes can upload' });
     }
 
-    // Upload PDF buffer to Greenfield
-    const pdfUpload = await uploadToGreenfield(req.file.buffer, `${crypto.randomBytes(16).toString('hex')}.pdf`);
-    const fileUrl = pdfUpload.url;
-    const fileHash = pdfUpload.hash;
+    // Generate unique certificate ID
+    const certificateID = crypto.randomBytes(32).toString('hex');
+    
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = path.join(__dirname, '../../uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Save PDF file locally
+    const pdfFileName = `${certificateID}.pdf`;
+    const pdfFilePath = path.join(uploadsDir, pdfFileName);
+    fs.writeFileSync(pdfFilePath, req.file.buffer);
+    
+    // Generate local file URL
+    const fileUrl = `${req.protocol}://${req.get('host')}/files/${pdfFileName}`;
+    const fileHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
 
     // Generate metadata
-    const metadata = generateMetadata(studentWallet.toLowerCase(), issuerWallet.toLowerCase(), fileUrl, fileHash);
+    const metadata = generateMetadata(studentWallet.toLowerCase(), issuerWallet.toLowerCase(), fileUrl, fileHash, certificateID);
 
-    // Upload metadata JSON to Greenfield
-    const metadataBuffer = Buffer.from(JSON.stringify(metadata));
-    const metadataUpload = await uploadToGreenfield(metadataBuffer, `${metadata.certificateID}.json`, true);
-    const metadataUrl = metadataUpload.url;
+    // Save metadata JSON locally
+    const metadataFileName = `${certificateID}.json`;
+    const metadataFilePath = path.join(uploadsDir, metadataFileName);
+    const metadataBuffer = Buffer.from(JSON.stringify(metadata, null, 2));
+    fs.writeFileSync(metadataFilePath, metadataBuffer);
+    
+    // Generate local metadata URL
+    const metadataUrl = `${req.protocol}://${req.get('host')}/files/${metadataFileName}`;
 
     // Save to DB
     const certificate = new Certificate({
@@ -65,6 +84,8 @@ const uploadCertificate = async (req, res) => {
     await certificate.save();
 
     console.log('Certificate saved to database:', certificate._id);
+    console.log('PDF saved locally:', pdfFilePath);
+    console.log('Metadata saved locally:', metadataFilePath);
 
     res.json({
       success: true,

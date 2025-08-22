@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 export default function PDFViewer({ url, onClose }) {
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [errorDetails, setErrorDetails] = useState(null);
 
   useEffect(() => {
     const timeout = setTimeout(() => {
@@ -10,10 +11,22 @@ export default function PDFViewer({ url, onClose }) {
       if (loading) {
         setError(true);
         setLoading(false);
+        setErrorDetails('Loading timeout - the file may be unavailable or blocked');
       }
     }, 7000);
     return () => clearTimeout(timeout);
   }, [loading]);
+
+  const handleIframeError = () => {
+    setError(true);
+    setLoading(false);
+    setErrorDetails('Failed to load the PDF file. This could be due to CORS restrictions or the file being unavailable.');
+  };
+
+  const handleIframeLoad = () => {
+    setLoading(false);
+    setError(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -34,8 +47,8 @@ export default function PDFViewer({ url, onClose }) {
             <iframe
               src={url}
               className="w-full h-[72vh] border-0"
-              onLoad={() => setLoading(false)}
-              onError={() => { setError(true); setLoading(false); }}
+              onLoad={handleIframeLoad}
+              onError={handleIframeError}
               title="Certificate PDF"
             />
           )}
@@ -51,11 +64,23 @@ export default function PDFViewer({ url, onClose }) {
             <div className="p-6 text-center">
               <div className="text-6xl mb-4">📄</div>
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Certificate Unavailable</h3>
-              <p className="text-gray-600 mb-4">The file host blocked embedding or the file isn't reachable right now.</p>
-              <div className="bg-gray-100 rounded-lg p-3 text-left">
+              <p className="text-gray-600 mb-4">{errorDetails || 'The file host blocked embedding or the file isn\'t reachable right now.'}</p>
+              
+              <div className="bg-gray-100 rounded-lg p-3 text-left mb-4">
                 <p className="text-sm text-gray-600 mb-1">File URL:</p>
                 <p className="text-xs font-mono text-gray-800 break-all">{url}</p>
               </div>
+              
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-left mb-4">
+                <p className="text-sm text-yellow-800 mb-1">Troubleshooting:</p>
+                <ul className="text-xs text-yellow-700 space-y-1">
+                  <li>• Check if the backend server is running</li>
+                  <li>• Verify the file exists in the uploads directory</li>
+                  <li>• Try opening the file in a new tab</li>
+                  <li>• Check browser console for error details</li>
+                </ul>
+              </div>
+              
               <div className="mt-4 flex justify-center gap-3">
                 <a href={url} target="_blank" rel="noreferrer" className="px-4 py-2 rounded bg-black text-white">Open in new tab</a>
                 <button onClick={onClose} className="px-4 py-2 rounded border">Close</button>

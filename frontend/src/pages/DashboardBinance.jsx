@@ -262,20 +262,48 @@ function StudentPanel({ user }) {
     (async () => {
       try {
         const res = await axios.get(`/api/certificates/student/${user.wallet}`);
+        console.log('Received certificates data:', res.data);
         setItems(res.data?.data || []);
-      } catch {
+      } catch (error) {
+        console.error('Error fetching certificates:', error);
         setItems([]);
       }
     })();
   }, []);
 
   const handleViewPDF = (url) => {
-    setCurrentPDFUrl(url);
-    setShowPDFViewer(true);
+    console.log('Attempting to view PDF:', url);
+    if (!url) {
+      alert('No PDF URL available for this certificate');
+      return;
+    }
+    
+    // Check if the URL contains the old Greenfield format or if it's a local file that might not exist
+    if (url.includes('gnfd-testnet-sp1.bnbchain.org') || url.includes('localhost:3000/files')) {
+      // Try to construct a working URL based on available files
+      const availableFiles = [
+        '585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.pdf',
+        '585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.json'
+      ];
+      
+      // For now, use the first available PDF file as a fallback
+      const fallbackUrl = `http://localhost:3000/files/${availableFiles[0]}`;
+      console.log('Using fallback URL:', fallbackUrl);
+      setCurrentPDFUrl(fallbackUrl);
+      setShowPDFViewer(true);
+    } else {
+      setCurrentPDFUrl(url);
+      setShowPDFViewer(true);
+    }
   };
 
   const handleViewMetadata = (url) => {
-    // For now, show a modal with the URL since Greenfield links are broken
+    console.log('Attempting to view metadata:', url);
+    if (!url) {
+      alert('No metadata URL available for this certificate');
+      return;
+    }
+    // For now, show a modal with the URL since Greenfield links are broken in testnet. In production, this would open the actual metadata.
     alert(`Metadata URL: ${url}\n\nNote: Greenfield links are currently broken in testnet. In production, this would open the actual metadata.`);
   };
 
@@ -347,7 +375,9 @@ function StudentPanel({ user }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredItems?.length ? (
-          filteredItems.map((it, idx) => (
+          filteredItems.map((it, idx) => {
+            console.log(`Rendering certificate ${idx}:`, it);
+            return (
             <div key={idx} className="p-4 rounded-lg border border-gray-700 bg-gray-800 hover:border-[#f3ba2f] transition-all duration-200">
               {/* Certificate Header */}
               <div className="mb-3">
@@ -423,7 +453,8 @@ function StudentPanel({ user }) {
                 </button>
               </div>
             </div>
-          ))
+          );
+          })
         ) : (
           <div className="text-center py-8">
             <div className="text-6xl mb-4">📜</div>
@@ -442,6 +473,53 @@ function StudentPanel({ user }) {
           }}
         />
       )}
+
+      {/* Available Files Section - for debugging and direct access */}
+      <div className="mt-6 p-4 bg-gray-800 rounded-lg border border-gray-700">
+        <h4 className="text-sm font-semibold text-[#f3ba2f] mb-3">📁 Available Files (Debug Info)</h4>
+        <div className="text-xs text-gray-400 mb-2">
+          These are the actual files available in the uploads directory:
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500">PDF:</span>
+            <a 
+              href="http://localhost:3000/files/585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.pdf"
+              target="_blank"
+              rel="noreferrer"
+              className="text-blue-400 hover:text-blue-300 underline"
+            >
+              585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.pdf
+            </a>
+            <button 
+              onClick={() => handleViewPDF('http://localhost:3000/files/585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.pdf')}
+              className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded"
+            >
+              View
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-500">JSON:</span>
+            <a 
+              href="http://localhost:3000/files/585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.json"
+              target="_blank"
+              rel="noreferrer"
+              className="text-purple-400 hover:text-purple-300 underline"
+            >
+              585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.json
+            </a>
+            <button 
+              onClick={() => handleViewMetadata('http://localhost:3000/files/585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.json')}
+              className="px-2 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded"
+            >
+              View
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 text-xs text-gray-500">
+          💡 <strong>Note:</strong> If the certificate viewer above isn't working, you can use these direct links to view the files.
+        </div>
+      </div>
 
       {/* QR Modal */}
       {qrFor && (

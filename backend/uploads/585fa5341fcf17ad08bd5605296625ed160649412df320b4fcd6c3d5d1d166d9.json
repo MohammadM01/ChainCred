@@ -1,0 +1,8 @@
+{
+  "studentWallet": "0x1b731f778e1367b58b0c3fadb0ebd5485dcc210b",
+  "issuerWallet": "0xc55893f963eb0e7e595016f0d8bea3cb0ebb89a9",
+  "fileUrl": "http://localhost:3000/files/585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9.pdf",
+  "fileHash": "e611bfb25881ecdd2bfc14e997641a5b50c3ffe96a27b71380377373d712aff6",
+  "issuedDateISO": "2025-08-22T17:59:41.350Z",
+  "certificateID": "585fa5341fcf17ad08bd5605296625ed160649412df320b4fcd6c3d5d1d166d9"
+}
