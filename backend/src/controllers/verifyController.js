@@ -35,38 +35,58 @@ const verifyCertificate = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Certificate not found' });
     }
 
-    const { metadataUrl, studentWallet: dbStudent, fileHash, issuedDate } = certificate;
-      if (!certificate.tokenId) {
-        return res.status(400).json({ success: false, error: 'Certificate not minted yet' });
-      }
+    const { studentWallet: dbStudent, fileHash, issuedDate } = certificate;
+    
+    // For MVP: Allow verification of unminted certificates
+    // In production, you might want to require tokenId
+    if (certificate.tokenId) {
+      // Certificate is minted - perform blockchain verification
+      try {
+        // Check on-chain ownership
+        const isOwner = await verify(dbStudent, certificate.tokenId);
+        if (!isOwner) {
+          return res.json({ success: true, data: { valid: false, details: 'Ownership mismatch on chain' } });
+        }
 
-      // If this is a local demo metadata URL, skip on-chain checks (no contract required)
-      const isDemo = typeof metadataUrl === 'string' && metadataUrl.includes('/demo/metadata/');
-      if (!isDemo) {
-              // Check on-chain ownership
-      const isOwner = await verify(dbStudent, certificate.tokenId);
-      if (!isOwner) {
-        return res.json({ success: true, data: { valid: false, details: 'Ownership mismatch on chain' } });
+        // Check tokenURI matches metadataUrl (if available)
+        if (certificate.metadataUrl && !certificate.metadataUrl.includes('mongodb://')) {
+          const chainMetadataUrl = await getTokenURI(certificate.tokenId);
+          if (chainMetadataUrl !== certificate.metadataUrl) {
+            return res.json({ success: true, data: { valid: false, details: 'Metadata URL mismatch on chain' } });
+          }
+        }
+      } catch (blockchainError) {
+        console.error('Blockchain verification error:', blockchainError);
+        // Continue with database verification even if blockchain check fails
       }
+    }
 
-      // Check tokenURI matches metadataUrl
-      const chainMetadataUrl = await getTokenURI(certificate.tokenId);
-      if (chainMetadataUrl !== metadataUrl) {
-        return res.json({ success: true, data: { valid: false, details: 'Metadata URL mismatch on chain' } });
+    // Fetch metadata from MongoDB buffer instead of external URL
+    let fetchedMetadata;
+    if (certificate.metadataBuffer) {
+      try {
+        fetchedMetadata = JSON.parse(certificate.metadataBuffer.toString());
+      } catch (parseError) {
+        console.error('Error parsing metadata buffer:', parseError);
+        return res.status(500).json({ success: false, error: 'Invalid metadata format' });
       }
-      } else {
-        // demo: proceed without chain verification
-      }
-
-    // Fetch metadata from Greenfield
-    const response = await axios.get(metadataUrl);
-    const fetchedMetadata = response.data;
+    } else {
+      // Fallback: create basic metadata from certificate fields
+      fetchedMetadata = {
+        certificateID: certificate.certificateID,
+        studentWallet: dbStudent,
+        issuerWallet: certificate.issuerWallet,
+        fileHash: fileHash,
+        issuedDateISO: issuedDate.toISOString(),
+        note: 'Metadata generated from certificate fields'
+      };
+    }
 
     // Get user names for better UX
     const studentUser = await User.findOne({ wallet: dbStudent.toLowerCase() });
     const issuerUser = await User.findOne({ wallet: certificate.issuerWallet.toLowerCase() });
 
-    // Recompute hash
+    // Recompute hash to verify certificate integrity
     const recomputedID = crypto
       .createHash('sha256')
       .update(dbStudent + certificate.issuerWallet + fileHash + issuedDate.toISOString())
@@ -88,7 +108,9 @@ const verifyCertificate = async (req, res) => {
       issuerWallet: certificate.issuerWallet,
       issuedDate: issuedDate.toISOString(),
       pdfUrl: `/api/certificates/${certificate._id}/pdf`, // Path only - frontend will add BASE_URL
-      metadataUrl: `/api/certificates/${certificate._id}/metadata` // Path only - frontend will add BASE_URL
+      metadataUrl: `/api/certificates/${certificate._id}/metadata`, // Path only - frontend will add BASE_URL
+      status: certificate.status || 'pending',
+      tokenId: certificate.tokenId || null
     };
 
     res.json({
