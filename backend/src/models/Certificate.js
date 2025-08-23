@@ -5,6 +5,8 @@ const mongoose = require('mongoose');
  * Stores credential details: certificateID (hash), wallets, URLs from Greenfield, hash, date, and tokenId from opBNB.
  * Used in upload, mint, and verify flows.
  * Validation: All fields required except tokenId (added during mint).
+ * 
+ * NEW: PDFs are now stored directly in MongoDB as Buffer for easier deployment
  */
 const certificateSchema = new mongoose.Schema({
   certificateID: {
@@ -24,11 +26,27 @@ const certificateSchema = new mongoose.Schema({
   },
   fileUrl: {
     type: String,
-    required: true,
+    required: false, // Made optional since we now store PDFs in MongoDB
+  },
+  pdfBuffer: {
+    type: Buffer,
+    required: true, // NEW: Store PDF data directly in MongoDB
+  },
+  pdfContentType: {
+    type: String,
+    default: 'application/pdf', // NEW: Store content type
   },
   metadataUrl: {
     type: String,
-    required: true,
+    required: false, // Made optional since we now store metadata in MongoDB
+  },
+  metadataBuffer: {
+    type: Buffer,
+    required: true, // NEW: Store metadata directly in MongoDB
+  },
+  metadataContentType: {
+    type: String,
+    default: 'application/json', // NEW: Store metadata content type
   },
   fileHash: {
     type: String,

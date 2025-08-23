@@ -36,8 +36,8 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Static file serving for local uploads fallback
-app.use('/files', express.static(require('path').join(__dirname, '..', 'uploads')));
+// Static file serving for local uploads fallback (DEPRECATED - PDFs now stored in MongoDB)
+// app.use('/files', express.static(require('path').join(__dirname, '..', 'uploads')));
 
 // Routes (using defined variables to avoid redundant requires)
 app.use('/', indexRoutes);  // Mount at root for health check

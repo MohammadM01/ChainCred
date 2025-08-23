@@ -86,7 +86,9 @@ const verifyCertificate = async (req, res) => {
       certificateID: certificate.certificateID,
       studentWallet: dbStudent,
       issuerWallet: certificate.issuerWallet,
-      issuedDate: issuedDate.toISOString()
+      issuedDate: issuedDate.toISOString(),
+      pdfUrl: `/api/certificates/${certificate._id}/pdf`, // Path only - frontend will add BASE_URL
+      metadataUrl: `/api/certificates/${certificate._id}/metadata` // Path only - frontend will add BASE_URL
     };
 
     res.json({

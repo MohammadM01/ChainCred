@@ -3,7 +3,7 @@ import QRCode from 'qrcode';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { useUser } from '../context/UserContext';
-import axios from '../utils/api';
+import axios, { BASE_URL } from '../utils/api';
 import PDFViewer from '../components/PDFViewer';
 
 export default function DashboardBinance() {
@@ -270,15 +270,14 @@ function StudentPanel({ user }) {
     })();
   }, []);
 
-  const handleViewPDF = (url) => {
-    setCurrentPDFUrl(url);
+  const handleViewPDF = (certificateId) => {
+    // NEW: Use MongoDB-based PDF endpoint instead of local file URLs
+    const pdfUrl = `${BASE_URL}/api/certificates/${certificateId}/pdf`;
+    setCurrentPDFUrl(pdfUrl);
     setShowPDFViewer(true);
   };
 
-  const handleViewMetadata = (url) => {
-    // For now, show a modal with the URL since Greenfield links are broken
-    alert(`Metadata URL: ${url}\n\nNote: Greenfield links are currently broken in testnet. In production, this would open the actual metadata.`);
-  };
+
 
   const handleViewExplorer = (txHash) => {
     // Use the correct opBNB explorer URL
@@ -416,24 +415,20 @@ function StudentPanel({ user }) {
               
               {/* Action Buttons */}
               <div className="flex flex-wrap gap-2">
-                {it?.fileUrl && (
-                  <button 
-                    onClick={() => handleViewPDF(it.fileUrl)}
-                    className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
-                  >
-                    📄 PDF
-                  </button>
-                )}
-                {it?.metadataUrl && (
-                  <a 
-                    href={it.metadataUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors inline-flex items-center justify-center"
-                  >
-                    📋 Metadata
-                  </a>
-                )}
+                <button 
+                  onClick={() => handleViewPDF(it._id)}
+                  className="px-3 py-1 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                >
+                  📄 PDF
+                </button>
+                <a 
+                  href={`${BASE_URL}/api/certificates/${it._id}/metadata`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1 text-xs bg-purple-600 hover:bg-purple-700 text-white rounded-md transition-colors inline-flex items-center justify-center"
+                >
+                  📋 Metadata
+                </a>
                 {it?.txHash && (
                   <button
                     onClick={() => handleViewExplorer(it.txHash)}

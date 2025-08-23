@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import api from '../utils/api';
+import { BASE_URL } from '../utils/api';
 
 export default function NFTCard({ certificate, onRefresh, isInstitute = false }) {
   const [minting, setMinting] = useState(false);
@@ -158,16 +159,14 @@ export default function NFTCard({ certificate, onRefresh, isInstitute = false })
           </a>
         )}
 
-        {certificate.fileUrl && (
-          <a
-            href={certificate.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full py-2 px-4 bg-gray-600 hover:bg-gray-700 text-white text-center rounded-md font-medium transition-colors"
-          >
-            📄 View Certificate
-          </a>
-        )}
+        <a
+          href={`${BASE_URL}/api/certificates/${certificate._id}/pdf`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full py-2 px-4 bg-gray-600 hover:bg-gray-700 text-white text-center rounded-md font-medium transition-colors"
+        >
+          📄 View Certificate
+        </a>
 
         {/* Delete button - only show for pending certificates (not minted ones) */}
         {certificate.status === 'pending' && (

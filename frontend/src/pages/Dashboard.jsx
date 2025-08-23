@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Header from '../components/Header';
 import { useUser } from '../context/UserContext';
-import axios from '../utils/api';
+import axios, { BASE_URL } from '../utils/api';
 
 export default function Dashboard(){
   const { user, showToast } = useUser();
@@ -167,7 +167,7 @@ export default function Dashboard(){
                   </div>
                   <div className="text-sm text-gray-300">Date: {it?.metadata?.issuedDateISO}</div>
                   <div className="mt-2 flex gap-3 text-sm">
-                    {it?.metadata?.fileUrl && <a className="text-yellow-400" href={it.metadata.fileUrl} target="_blank" rel="noreferrer">PDF</a>}
+                    <a className="text-yellow-400" href={it.pdfUrl || `${BASE_URL}/api/certificates/${it._id}/pdf`} target="_blank" rel="noreferrer">PDF</a>
                     {it?.metadata && <a className="text-yellow-400" href={`data:application/json,${encodeURIComponent(JSON.stringify(it.metadata))}`} target="_blank" rel="noreferrer">Metadata</a>}
                     {it?.metadata?.txHash && <a className="text-yellow-400" href={`https://explorer.testnet.opbnb.io/tx/${it.metadata.txHash}`} target="_blank" rel="noreferrer">Tx</a>}
                     <button className="text-yellow-400" onClick={()=> setQuery(it?.metadata?.certificateID || it?.certificateID)}>Share Link</button>

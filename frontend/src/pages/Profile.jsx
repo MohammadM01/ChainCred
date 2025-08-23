@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../components/Header';
 import { useUser } from '../context/UserContext';
-import axios from '../utils/api';
+import axios, { BASE_URL } from '../utils/api';
 import Spline from '@splinetool/react-spline';
 import scene from '/assets/scene.splinecode';
 
@@ -367,16 +367,14 @@ export default function Profile(){
                         </div>
                         
                         <div className="mt-6 flex gap-3 text-sm">
-                          {it?.metadata?.fileUrl && (
-                            <a 
-                              className="bg-yellow-400/20 text-yellow-400 px-4 py-2 rounded-lg border border-yellow-400/30 hover:bg-yellow-400/30 transition-all duration-300 flex items-center gap-2 group-hover:scale-105 transform" 
-                              href={it.metadata.fileUrl} 
-                              target="_blank" 
-                              rel="noreferrer"
-                            >
-                              📄 PDF
-                            </a>
-                          )}
+                          <a 
+                            className="bg-yellow-400/20 text-yellow-400 px-4 py-2 rounded-lg border border-yellow-400/30 hover:bg-yellow-400/30 transition-all duration-300 flex items-center gap-2 group-hover:scale-105 transform" 
+                            href={it.pdfUrl || `${BASE_URL}/api/certificates/${it._id}/pdf`} 
+                            target="_blank" 
+                            rel="noreferrer"
+                          >
+                            📄 PDF
+                          </a>
                           {it?.metadata && (
                             <a 
                               className="bg-blue-400/20 text-blue-400 px-4 py-2 rounded-lg border border-blue-400/30 hover:bg-blue-400/30 transition-all duration-300 flex items-center gap-2 group-hover:scale-105 transform" 

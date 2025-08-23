@@ -9,11 +9,11 @@ const crypto = require('crypto');
 /**
  * Upload controller for ChainCred (institute only).
  * Handles PDF upload via multipart/form-data.
- * Flow: Check role, upload PDF to Greenfield, generate metadata, upload metadata JSON, save to DB.
+ * Flow: Check role, store PDF in MongoDB, generate metadata, upload metadata JSON, save to DB.
  * Returns { metadataUrl, fileHash, certificateID }.
  * Multer config: In-memory storage for buffer handling.
  * Security: Role check from DB; validate addresses.
- * Note: Assumes file is PDF; add validation if needed for MVP.
+ * Note: PDFs are now stored directly in MongoDB for easier deployment.
  */
 
 const upload = multer({ storage: multer.memoryStorage() });
@@ -44,50 +44,46 @@ const uploadCertificate = async (req, res) => {
       return res.status(404).json({ success: false, error: 'Student not found' });
     }
 
-    // Upload PDF using smart upload system
-    const pdfFileName = `${crypto.randomBytes(16).toString('hex')}.pdf`;
-    const pdfUpload = await smartUpload(req.file.buffer, pdfFileName, {
-      studentWallet: studentWallet.toLowerCase(),
-      issuerWallet: issuerWallet.toLowerCase(),
-      studentName: student.name,
-      issuerName: issuer.name
-    });
-    const fileUrl = pdfUpload.url;
-    const fileHash = pdfUpload.hash;
+    // Validate that uploaded file is a PDF
+    if (req.file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ success: false, error: 'Only PDF files are allowed' });
+    }
+
+    // Generate file hash and certificate ID
+    const fileHash = crypto.createHash('md5').update(req.file.buffer).digest('hex');
+    const certificateID = crypto.createHash('sha256').update(`${studentWallet}${issuerWallet}${fileHash}${Date.now()}`).digest('hex');
 
     // Generate metadata with names
     const metadata = generateMetadata(
-      studentWallet.toLowerCase(), 
-      issuerWallet.toLowerCase(), 
-      fileUrl, 
+      studentWallet.toLowerCase(),
+      issuerWallet.toLowerCase(),
+      `mongodb://${certificateID}`, // Placeholder URL since PDF is now in MongoDB
       fileHash,
       student.name,
       issuer.name
     );
 
-    // Upload metadata JSON using smart upload system
+    // Store metadata directly in MongoDB instead of using smartUpload
     const metadataBuffer = Buffer.from(JSON.stringify(metadata));
-    const metadataUpload = await smartUpload(metadataBuffer, `${metadata.certificateID}.json`, {
-      certificateID: metadata.certificateID,
-      type: 'certificate_metadata',
-      relatedPdfUrl: fileUrl
-    });
-    const metadataUrl = metadataUpload.url;
+    const metadataUrl = `mongodb://${certificateID}`; // Placeholder URL for backward compatibility
 
-    // Save to DB
     const certificate = new Certificate({
       certificateID: metadata.certificateID,
       studentWallet: studentWallet.toLowerCase(),
       issuerWallet: issuerWallet.toLowerCase(),
-      fileUrl,
-      metadataUrl,
+      fileUrl: `mongodb://${certificateID}`, // Placeholder URL for backward compatibility
+      pdfBuffer: req.file.buffer, // NEW: Store PDF data directly in MongoDB
+      pdfContentType: req.file.mimetype,
+      metadataUrl, // Placeholder URL for backward compatibility
+      metadataBuffer, // NEW: Store metadata directly in MongoDB
+      metadataContentType: 'application/json',
       fileHash,
       issuedDate: new Date(metadata.issuedDateISO),
       status: 'pending'
     });
     await certificate.save();
 
-    console.log('Certificate saved to database:', certificate._id);
+    console.log('Certificate saved to database with PDF buffer:', certificate._id);
 
     res.json({
       success: true,

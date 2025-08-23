@@ -4,6 +4,7 @@ const User = require('../models/User');
 /**
  * Certificate controller for ChainCred.
  * Handles fetching certificates for dashboards and verification.
+ * NEW: Now serves PDFs directly from MongoDB instead of local files.
  */
 
 // GET /api/certificates/student/:wallet
@@ -74,6 +75,49 @@ const getCertificateById = async (req, res) => {
   } catch (error) {
     console.error('Error fetching certificate by ID:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+};
+
+// NEW: GET /api/certificates/:id/pdf - Serve PDF directly from MongoDB
+const getCertificatePDF = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const certificate = await Certificate.findById(id);
+    if (!certificate || !certificate.pdfBuffer) {
+      return res.status(404).json({ success: false, error: 'PDF not found in database' });
+    }
+    res.set({
+      'Content-Type': certificate.pdfContentType || 'application/pdf',
+      'Content-Length': certificate.pdfBuffer.length,
+      'Content-Disposition': `inline; filename="certificate-${certificate.certificateID}.pdf"`,
+      'Cache-Control': 'public, max-age=3600',
+    });
+    res.send(certificate.pdfBuffer);
+    console.log(`Served PDF for certificate ${certificate.certificateID} (${certificate.pdfBuffer.length} bytes)`);
+  } catch (error) {
+    console.error('Error serving PDF:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
+  }
+};
+
+const getCertificateMetadata = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const certificate = await Certificate.findById(id);
+    if (!certificate || !certificate.metadataBuffer) {
+      return res.status(404).json({ success: false, error: 'Metadata not found in database' });
+    }
+    res.set({
+      'Content-Type': certificate.metadataContentType || 'application/json',
+      'Content-Length': certificate.metadataBuffer.length,
+      'Content-Disposition': `inline; filename="metadata-${certificate.certificateID}.json"`,
+      'Cache-Control': 'public, max-age=3600',
+    });
+    res.send(certificate.metadataBuffer);
+    console.log(`Served metadata for certificate ${certificate.certificateID} (${certificate.metadataBuffer.length} bytes)`);
+  } catch (error) {
+    console.error('Error serving metadata:', error);
+    res.status(500).json({ success: false, error: 'Internal server error' });
   }
 };
 
@@ -164,6 +208,8 @@ module.exports = {
   getStudentCertificates,
   getInstituteCertificates,
   getCertificateById,
+  getCertificatePDF,
+  getCertificateMetadata,
   verifyCertificate,
   deleteCertificate
 };

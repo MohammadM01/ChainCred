@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Header from '../components/Header';
-import axios from '../utils/api';
+import { useUser } from '../context/UserContext';
+import axios, { BASE_URL } from '../utils/api';
 import { useSearchParams } from 'react-router-dom';
 
 export default function VerifyPage(){
@@ -72,7 +72,7 @@ export default function VerifyPage(){
                   <div><span className="text-gray-400">Issued:</span> <span className="text-white ml-2">{result.metadata?.issuedDateISO}</span></div>
                   <div><span className="text-gray-400">CertificateID:</span> <span className="text-white font-mono ml-2">{result.metadata?.certificateID}</span></div>
                   <div className="pt-2">
-                    <a className="text-yellow-400 hover:underline" href={result.metadata?.fileUrl} target="_blank" rel="noreferrer">📄 Open PDF</a>
+                    <a className="text-yellow-400 hover:underline" href={`${BASE_URL}${result.pdfUrl}`} target="_blank" rel="noreferrer">📄 Open PDF</a>
                   </div>
                   {result.metadata?.txHash && (
                     <div>
