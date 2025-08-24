@@ -8,6 +8,7 @@ export default function UploadForm({ onSuccess, issuerWallet }) {
   });
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
+  const canSubmit = !!formData.studentWallet && !!formData.file && !uploading;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,6 +85,12 @@ export default function UploadForm({ onSuccess, issuerWallet }) {
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           required
         />
+        {formData.file && (
+          <div className="flex items-center justify-between text-xs text-gray-600 mt-1">
+            <div className="truncate">📄 {formData.file.name} <span className="text-gray-400">({(formData.file.size/1024/1024).toFixed(2)} MB)</span></div>
+            <button type="button" onClick={()=> setFormData(prev => ({ ...prev, file: null }))} className="text-blue-600 hover:underline">Remove</button>
+          </div>
+        )}
         <p className="text-xs text-gray-500 mt-1">Only PDF files are supported</p>
       </div>
 
@@ -93,7 +100,7 @@ export default function UploadForm({ onSuccess, issuerWallet }) {
 
       <button
         type="submit"
-        disabled={uploading}
+        disabled={!canSubmit}
         className={`w-full py-2 px-4 rounded-md font-medium transition-colors ${
           uploading
             ? 'bg-gray-400 cursor-not-allowed'
